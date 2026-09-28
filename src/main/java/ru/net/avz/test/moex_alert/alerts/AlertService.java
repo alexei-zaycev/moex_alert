@@ -100,16 +100,16 @@ public class AlertService {
         return _sendAlert(alert)
                 .publishOn(Schedulers.boundedElastic())
                 .map(isSent -> {
-                    alert.setSendAttempts(alert.getSendAttempts() + 1);
                     if (isSent) {
-                        alert.setNextSendAfter(null);
-                        alert.setSentAt(LocalDateTime.now());
+                        alertRepository.markAlertAsSent(
+                                alert.getId(),
+                                LocalDateTime.now());
                     } else {
-                        alert.setNextSendAfter(_generateNextSendAfter(alert.getSendAttempts()));
+                        alertRepository.markAlertAsNotSent(
+                                alert.getId(),
+                                alert.getSendAttempts(),
+                                _generateNextSendAfter(alert.getSendAttempts()));
                     }
-                    // для простоты мы допускаем, что оповещение может отправиться (_sendAlert),
-                    // а данные в базу не будут внесены (save) из-за гонки
-                    alertRepository.saveAndFlush(alert);
                     return isSent;
                 })
                 .onErrorResume(ex -> {

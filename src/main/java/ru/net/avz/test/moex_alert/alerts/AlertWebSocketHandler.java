@@ -49,8 +49,8 @@ public class AlertWebSocketHandler extends TextWebSocketHandler {
             WebSocketSession session,
             org.springframework.web.socket.CloseStatus status
     ) {
-        session.getAttributes().remove(AlertWebSocketHandler._ATTR_KEY_LOCK);
         sessions.remove(session.getId());
+        session.getAttributes().remove(AlertWebSocketHandler._ATTR_KEY_LOCK);
         log.debug("WebSocket connection closed. Active {} sessions", sessions.size());
     }
 
@@ -79,6 +79,9 @@ public class AlertWebSocketHandler extends TextWebSocketHandler {
         int success = 0;
         for (WebSocketSession session : sessions.values()) {
             try {
+                if (!session.isOpen()) {
+                    continue;
+                }
                 ReentrantLock lock = Objects.requireNonNull((ReentrantLock) session.getAttributes().get(AlertWebSocketHandler._ATTR_KEY_LOCK));
                 if (lock.tryLock(10, TimeUnit.SECONDS)) {
                     try {

@@ -50,7 +50,7 @@ public class TickerRestController {
     public TickerDto getOne(
             @Valid @PathVariable @TickerNameField String name
     ) {
-        TickerEntity entity = tickerService.findOneByNameOrThrow(name);
+        TickerEntity entity = tickerService.findByNameOrThrow(name);
         return TickerDto.of(entity);
     }
 

@@ -1,7 +1,9 @@
 package ru.net.avz.test.moex_alert.alerts;
 
 import jakarta.annotation.Nullable;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -77,5 +79,36 @@ interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
     """)
     List<AlertEntity> findReadyForResendAlerts(
             @Param("ts") LocalDateTime ts
+    );
+
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE AlertEntity a
+        SET a.sendAttempts = a.sendAttempts + 1,
+            a.nextSendAfter = null,
+            a.sentAt = :sentAt
+        WHERE a.id = :id
+          AND a.sentAt IS NULL
+    """)
+    void markAlertAsSent(
+            @Param("id") UUID  id,
+            @Param("sentAt") LocalDateTime sentAt
+    );
+
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE AlertEntity a
+        SET a.sendAttempts = a.sendAttempts + 1,
+            a.nextSendAfter = :nextSendAfter
+        WHERE a.id = :id
+          AND a.sentAt IS NULL
+          AND a.sendAttempts = :sendAttempts
+    """)
+    void markAlertAsNotSent(
+            @Param("id") UUID  id,
+            @Param("sendAttempts") int currentSendAttempts,
+            @Param("nextSendAfter") @Nullable LocalDateTime nextSendAfter
     );
 }

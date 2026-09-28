@@ -28,7 +28,7 @@ public class TickerService {
         return tickerRepository.findAll(pageable);
     }
 
-    public TickerEntity findOneByNameOrThrow(
+    public TickerEntity findByNameOrThrow(
             String tickerName
     ) {
         return tickerRepository.findByName(tickerName)
@@ -52,7 +52,7 @@ public class TickerService {
             String tickerName,
             TickerUpdateDto tickerNew
     ) {
-        TickerEntity tickerCurrent = findOneByNameOrThrow(tickerName);
+        TickerEntity tickerCurrent = findByNameOrThrow(tickerName);
         return tickerRepository.saveAndFlush(tickerNew.applyTo(tickerCurrent).build());
     }
 
@@ -61,7 +61,7 @@ public class TickerService {
             String tickerName,
             TickerPatchDto tickerPatch
     ) {
-        TickerEntity tickerCurrent = findOneByNameOrThrow(tickerName);
+        TickerEntity tickerCurrent = findByNameOrThrow(tickerName);
         return tickerRepository.saveAndFlush(tickerPatch.applyTo(tickerCurrent).build());
     }
 
@@ -69,7 +69,7 @@ public class TickerService {
     public void delete(
             String tickerName
     ) {
-        TickerEntity tickerCurrent = findOneByNameOrThrow(tickerName);
+        TickerEntity tickerCurrent = findByNameOrThrow(tickerName);
         tickerRepository.deleteById(tickerCurrent.getId());
     }
 }
