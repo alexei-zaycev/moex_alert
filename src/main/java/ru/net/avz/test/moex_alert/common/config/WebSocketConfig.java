@@ -12,11 +12,11 @@ import ru.net.avz.test.moex_alert.alerts.AlertWebSocketHandler;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final AlertWebSocketHandler webSocketAlertHandler;
+    private final AlertWebSocketHandler alertWebSocketHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketAlertHandler, "/ws/alerts")
+        registry.addHandler(alertWebSocketHandler, AlertWebSocketHandler.ENDPOINT.path())
                 .setAllowedOrigins("*");
     }
 }

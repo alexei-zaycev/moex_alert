@@ -9,6 +9,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import ru.net.avz.test.moex_alert.alerts.dto.AlertWebSocketDto;
+import ru.net.avz.test.moex_alert.common.WebSocketEndpointSpec;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +20,15 @@ import java.util.concurrent.locks.ReentrantLock;
 @RequiredArgsConstructor
 @Slf4j
 public class AlertWebSocketHandler extends TextWebSocketHandler {
+
+    public static final WebSocketEndpointSpec ENDPOINT =
+            WebSocketEndpointSpec.builder()
+                    .path("/ws/alerts")
+                    .operationTag("Alerts")
+                    .operationId("wsAlerts")
+                    .operationTitle("Подписка на алерты")
+                    .messageType(AlertWebSocketDto.class)
+                    .build();
 
     private static final String _ATTR_KEY_LOCK = "lock";
 

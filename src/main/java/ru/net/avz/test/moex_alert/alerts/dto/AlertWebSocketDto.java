@@ -1,5 +1,6 @@
 package ru.net.avz.test.moex_alert.alerts.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import org.hibernate.validator.constraints.UUID;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
+@Schema(name = "AlertWebSocketDto")
 public record AlertWebSocketDto(
 
         @NotNull
