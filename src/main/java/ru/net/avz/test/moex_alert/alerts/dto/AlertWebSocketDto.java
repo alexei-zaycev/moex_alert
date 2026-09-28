@@ -6,20 +6,21 @@ import org.hibernate.validator.constraints.UUID;
 import ru.net.avz.test.moex_alert.alerts.AlertEntity;
 import ru.net.avz.test.moex_alert.prices.fields.PriceAmountField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
-import ru.net.avz.test.moex_alert.tickers.dto.TickerDto;
+import ru.net.avz.test.moex_alert.tickers.fields.TickerNameField;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
-public record AlertDto(
+public record AlertWebSocketDto(
 
         @NotNull
         @UUID
         java.util.UUID id,
 
         @NotNull
-        TickerDto ticker,
+        @TickerNameField
+        String ticker,
 
         @NotNull
         LocalDateTime ts,
@@ -32,27 +33,14 @@ public record AlertDto(
         @PriceCurrencyField
         String currency
 
-//        @NotNull
-//        @AlertSendAttemptsField
-//        Integer sendAttempts,
-//
-//        @Nullable
-//        LocalDateTime nextSendAfter,
-//
-//        @Nullable
-//        LocalDateTime sentAt,
-
 ) {
-    public static AlertDto of(AlertEntity alert) {
-        return AlertDto.builder()
+    public static AlertWebSocketDto of(AlertEntity alert) {
+        return AlertWebSocketDto.builder()
                 .id(alert.getId())
-                .ticker(TickerDto.of(alert.getTicker()))
+                .ticker(alert.getTicker().getName())
                 .ts(alert.getTs())
                 .amount(alert.getAmount())
                 .currency(alert.getCurrency())
-//                .sendAttempts(alert.getSendAttempts())
-//                .nextSendAfter(alert.getNextSendAfter())
-//                .sentAt(alert.getSentAt())
                 .build();
     }
 }

@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -54,7 +53,6 @@ public class TickerEntity {
 
     @Column(length = 3)
     @NotNull
-    @ColumnDefault("'RUB'")
     @Getter
     private String currency;
 

@@ -25,6 +25,7 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final TickerService tickerService;
+    private final AlertWebSocketHandler alertWebSocketHandler;
 
     private static final AtomicBoolean _runningScheduleResendAlerts = new AtomicBoolean(false);
 
@@ -32,22 +33,20 @@ public class AlertService {
     protected void scheduleResendAlerts() {
         if (_runningScheduleResendAlerts.compareAndSet(false, true)) {
             LocalDateTime start = LocalDateTime.now();
-            log.debug("🚀 Alerts resend job started at {}", start);
-            Mono.fromCallable(alertRepository::findReadyForResendAlerts)
+            log.debug("🚀 Alerts resend job started");
+            Mono.fromCallable(() -> alertRepository.findReadyForResendAlerts(LocalDateTime.now()))
                     .subscribeOn(Schedulers.boundedElastic())
                     .flatMapMany(Flux::fromIterable)
                     .flatMap(this::trySendAlert)
                     .collectList()
+                    .doOnSuccess(flags -> log.debug("✅ Alerts resend job completed, processed {} (duration: {} ms)",
+                            flags != null ? flags.stream().filter(isSent -> isSent).count() : 0,
+                            Duration.between(start, LocalDateTime.now()).toMillis()))
+                    .doOnError(ex -> log.error("❌ Alerts resend job failed (duration: {} ms)",
+                            Duration.between(start, LocalDateTime.now()).toMillis(),
+                            ex))
                     .doFinally(signal -> _runningScheduleResendAlerts.set(false))
-                    .subscribe(
-                            flags -> log.debug("✅ Alerts resend job completed at {}, processed {} (duration: {} ms)",
-                                    LocalDateTime.now(),
-                                    flags.size(),
-                                    Duration.between(start, LocalDateTime.now()).toMillis()),
-                            ex -> log.error("❌ Alerts resend job failed at {} (duration: {} ms)",
-                                    LocalDateTime.now(),
-                                    Duration.between(start, LocalDateTime.now()).toMillis(),
-                                    ex));
+                    .subscribe();
         }
     }
 
@@ -101,10 +100,12 @@ public class AlertService {
         return _sendAlert(alert)
                 .publishOn(Schedulers.boundedElastic())
                 .map(isSent -> {
-                    alert.setNextSendAfter(_generateNextSendAfter(alert.getSendAttempts()));
                     alert.setSendAttempts(alert.getSendAttempts() + 1);
                     if (isSent) {
+                        alert.setNextSendAfter(null);
                         alert.setSentAt(LocalDateTime.now());
+                    } else {
+                        alert.setNextSendAfter(_generateNextSendAfter(alert.getSendAttempts()));
                     }
                     // для простоты мы допускаем, что оповещение может отправиться (_sendAlert),
                     // а данные в базу не будут внесены (save) из-за гонки
@@ -134,7 +135,7 @@ public class AlertService {
     private Mono<Boolean> _sendAlert(
             AlertEntity alert
     ) {
-        // TODO отправка в телегу
-        return Mono.just(false);
+        return Mono.fromCallable(() -> alertWebSocketHandler.broadcastAlert(alert))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

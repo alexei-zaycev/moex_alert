@@ -4,7 +4,6 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
@@ -53,7 +52,6 @@ public class AlertEntity {
 
     @Column
     @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Getter
     private LocalDateTime ts;
 
@@ -64,19 +62,16 @@ public class AlertEntity {
 
     @Column(length = 3)
     @NotNull
-    @ColumnDefault("'RUB'")
     @Getter
     private String currency;
 
     @Column
     @NotNull
-    @ColumnDefault("0")
     @Getter @Setter
     private Integer sendAttempts;
 
     @Column
     @Nullable
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Getter @Setter
     private LocalDateTime nextSendAfter;
 

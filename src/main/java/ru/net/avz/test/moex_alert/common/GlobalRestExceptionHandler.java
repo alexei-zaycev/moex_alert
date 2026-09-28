@@ -74,7 +74,7 @@ public class GlobalRestExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ErrorResponseException handleDataIntegrity(DataIntegrityViolationException ex) {
         @Nullable String msg = ex.getMostSpecificCause().getMessage();
-        if (msg != null && msg.contains(TickerEntity.IDX_UNIQUE_NAME)) {
+        if (msg != null && msg.toLowerCase().contains(TickerEntity.IDX_UNIQUE_NAME.toLowerCase())) {
             return _newResponse(TickerAlreadyExistsException.HTTP_STATUS, ErrorCodes.TICKER_ALREADY_EXISTS, null, ex);
         }
         return _newResponse(HttpStatus.CONFLICT, ErrorCodes.DATA_INTEGRITY_VIOLATION, null, ex);

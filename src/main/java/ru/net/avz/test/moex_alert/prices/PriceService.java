@@ -13,7 +13,6 @@ import ru.net.avz.test.moex_alert.tickers.TickerService;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -47,18 +46,16 @@ public class PriceService {
     protected void scheduleLoadAndSavePrices() {
         if (_runningScheduleLoadAndSavePrices.compareAndSet(false, true)) {
             LocalDateTime start = LocalDateTime.now();
-            log.debug("🚀 Price refresh job started at {}", start);
+            log.debug("🚀 Price refresh job started");
             loadAndSavePrices()
+                    .doOnSuccess(prices -> log.debug("✅ Price refresh job completed, processed {} (duration: {} ms)",
+                            prices != null ? prices.size() : 0,
+                            Duration.between(start, LocalDateTime.now()).toMillis()))
+                    .doOnError(ex -> log.error("❌ Price refresh job failed (duration: {} ms)",
+                            Duration.between(start, LocalDateTime.now()).toMillis(),
+                            ex))
                     .doFinally(signal -> _runningScheduleLoadAndSavePrices.set(false))
-                    .subscribe(
-                            prices -> log.debug("✅ Price refresh job completed at {}, processed {} (duration: {} ms)",
-                                    LocalDateTime.now(),
-                                    prices.size(),
-                                    Duration.between(start, LocalDateTime.now()).toMillis()),
-                            ex -> log.error("❌ Price refresh job failed at {} (duration: {} ms)",
-                                    LocalDateTime.now(),
-                                    Duration.between(start, LocalDateTime.now()).toMillis(),
-                                    ex));
+                    .subscribe();
         }
     }
 
@@ -104,17 +101,20 @@ public class PriceService {
             String xml,
             List<TickerEntity> tickers
     ) {
+
         XMLInputFactory factory = XMLInputFactory.newInstance();
         factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+
+        String currency = "RUB";
 
         try (StringReader stringReader = new StringReader(xml)) {
             XMLStreamReader reader = factory.createXMLStreamReader(stringReader);
             try {
 
                 Map<String, TickerEntity> tickersByName =
-                        tickers.stream().collect(Collectors.toMap(
-                                TickerEntity::getName,
-                                Function.identity()));
+                        tickers.stream()
+                                .filter(ticker -> ticker.getCurrency().equals(currency))
+                                .collect(Collectors.toMap(TickerEntity::getName, Function.identity()));
 
                 List<PriceEntity> prices =
                         new ArrayList<>(tickers.size());
@@ -147,7 +147,7 @@ public class PriceService {
                                                     .ticker(ticker)
                                                     .ts(LocalDateTime.now())
                                                     .amount(new BigDecimal(rowLast))
-                                                    .currency("RUB")
+                                                    .currency(currency)
                                                     .build());
                                 } catch (NumberFormatException e) {
                                     log.warn("Invalid price value for {}: {}", rowSecId, rowLast);
@@ -164,7 +164,7 @@ public class PriceService {
             } finally {
                 reader.close();
             }
-        } catch (XMLStreamException ex) {
+        } catch (Exception ex) {
             log.error("Error parsing MOEX response", ex);
             return Optional.empty();
         }

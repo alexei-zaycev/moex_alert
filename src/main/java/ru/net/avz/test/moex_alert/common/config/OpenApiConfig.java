@@ -19,9 +19,8 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("MOEX Tracker API")
+                        .title("MOEX Alert API")
                         .version("1.0")
-                        .description("API для управления портфелем")
                         .contact(new Contact()
                                 .name("Zaitsev Alexei")
                                 .email("alexei.zaycev@yandex.ru"))

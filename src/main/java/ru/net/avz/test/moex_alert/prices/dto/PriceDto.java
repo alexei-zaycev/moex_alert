@@ -10,7 +10,6 @@ import ru.net.avz.test.moex_alert.tickers.dto.TickerDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Builder
 public record PriceDto(

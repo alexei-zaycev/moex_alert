@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,9 +69,13 @@ interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
     @Query("""
         SELECT a
         FROM AlertEntity a
+        INNER JOIN FETCH a.ticker t
         WHERE a.sentAt IS NULL
           AND a.nextSendAfter IS NOT NULL
-          AND a.nextSendAfter < CURRENT_TIMESTAMP
+          AND a.nextSendAfter <= :ts
+        ORDER BY a.ts, t.name
     """)
-    List<AlertEntity> findReadyForResendAlerts();
+    List<AlertEntity> findReadyForResendAlerts(
+            @Param("ts") LocalDateTime ts
+    );
 }

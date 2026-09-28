@@ -14,7 +14,7 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @NotBlank
-@Size(max = 3)
+@Size(min = 3, max = 3)
 @Schema(description = "Код валюты", example = "RUB")
 @Target({FIELD, PARAMETER})
 @Retention(RUNTIME)

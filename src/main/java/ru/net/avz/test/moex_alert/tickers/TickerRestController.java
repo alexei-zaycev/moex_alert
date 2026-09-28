@@ -24,15 +24,15 @@ import ru.net.avz.test.moex_alert.tickers.fields.TickerNameField;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/tickers")
+@RequestMapping("/api/tickers")
 @Validated
-@Tag(name = "tickers", description = "Операции с тикерами")
+@Tag(name = "Tickers", description = "Операции с тикерами")
 public class TickerRestController {
 
     private final TickerService tickerService;
 
     @GetMapping
-    @Operation(summary = "Получить список тикеров")
+    @Operation(summary = "Получение списка тикеров")
     @ResponseStatus(HttpStatus.OK)
     public PagedModel<TickerDto> getAll(
             @Valid @ParameterObject Pageable pageable
@@ -42,7 +42,7 @@ public class TickerRestController {
     }
 
     @GetMapping("/{name}")
-    @Operation(summary = "Получить актив по тикеру")
+    @Operation(summary = "Получение тикера по имени")
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
             @ApiResponse(responseCode = "404", description = "Тикер не найден", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
@@ -55,7 +55,7 @@ public class TickerRestController {
     }
 
     @PostMapping
-    @Operation(summary = "Создать новый тикер")
+    @Operation(summary = "Создание нового тикера")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses({
             @ApiResponse(responseCode = "409", description = "Тикер уже существует", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
@@ -69,7 +69,7 @@ public class TickerRestController {
     }
 
     @PutMapping("/{name}")
-    @Operation(summary = "Обновить тикер")
+    @Operation(summary = "Обновление тикера")
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
             @ApiResponse(responseCode = "404", description = "Тикер не найден", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
@@ -84,7 +84,7 @@ public class TickerRestController {
     }
 
     @PatchMapping("/{name}")
-    @Operation(summary = "Частично обновить тикер")
+    @Operation(summary = "Частичное обновление тикера")
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
             @ApiResponse(responseCode = "404", description = "Тикер не найден", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
@@ -99,7 +99,7 @@ public class TickerRestController {
     }
 
     @DeleteMapping("/{name}")
-    @Operation(summary = "Удалить тикер")
+    @Operation(summary = "Удаление тикера")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponses({
             @ApiResponse(responseCode = "404", description = "Тикер не найден", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))

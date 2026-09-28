@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
@@ -55,7 +54,6 @@ public class PriceEntity {
 
     @Column
     @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Getter
     private LocalDateTime ts;
 
@@ -66,7 +64,6 @@ public class PriceEntity {
 
     @Column(length = 3)
     @NotNull
-    @ColumnDefault("'RUB'")
     @Getter
     private String currency;
 }
