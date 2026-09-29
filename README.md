@@ -14,7 +14,7 @@
 ---
 
 ## Стек технологий
-- **бэкенд:** Java 17, Spring Boot 4.1.1 / Actuator / JPA / WebMVC / WebFlux / WebSocket, Flyway, Lombok
+- **бэкенд:** Java 17, Spring Boot 4.1.1 / Actuator / Data JPA / WebMVC / WebFlux / WebSocket, Flyway, Lombok
 - **база данных:** PostgreSQL 15
 - **контейнеризация:** Docker, Docker Compose (multi-stage build)
 
