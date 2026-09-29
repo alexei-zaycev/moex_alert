@@ -161,7 +161,7 @@ public class PriceService {
                     }
                 }
 
-                log.debug("Parsed {} prices from MOEX for registered {} tickers", prices.size(), tickersByName.size());
+                log.info("Parsed {} prices from MOEX for registered {} tickers", prices.size(), tickersByName.size());
 
                 return Optional.of(prices);
 
