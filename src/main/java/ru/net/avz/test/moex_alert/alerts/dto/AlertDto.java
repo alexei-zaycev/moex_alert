@@ -1,9 +1,11 @@
 package ru.net.avz.test.moex_alert.alerts.dto;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import org.hibernate.validator.constraints.UUID;
 import ru.net.avz.test.moex_alert.alerts.AlertEntity;
+import ru.net.avz.test.moex_alert.alerts.fields.AlertDiffField;
+import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceAmountField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
 import ru.net.avz.test.moex_alert.tickers.dto.TickerDto;
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
 public record AlertDto(
 
         @NotNull
-        @UUID
+        @EntityIdField
         java.util.UUID id,
 
         @NotNull
@@ -27,6 +29,10 @@ public record AlertDto(
         @NotNull
         @PriceAmountField
         BigDecimal amount,
+
+        @Nullable
+        @AlertDiffField
+        Float diff,
 
         @NotNull
         @PriceCurrencyField
@@ -49,6 +55,7 @@ public record AlertDto(
                 .ticker(TickerDto.of(alert.getTicker()))
                 .ts(alert.getTs())
                 .amount(alert.getAmount())
+                .diff(alert.getDiff())
                 .currency(alert.getCurrency())
 //                .sendAttempts(alert.getSendAttempts())
 //                .nextSendAfter(alert.getNextSendAfter())

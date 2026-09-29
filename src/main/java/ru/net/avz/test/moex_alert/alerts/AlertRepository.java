@@ -22,6 +22,10 @@ interface AlertSignalRaw {
     @Nullable BigDecimal getAlertAmountLast();
 
     BigDecimal getAlertAmountNew();
+
+    BigDecimal getPriceLower();
+
+    BigDecimal getPriceUpper();
 }
 
 interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
@@ -54,18 +58,21 @@ interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
                              FROM tickers T
                              INNER JOIN PRICES_STATS P ON P.ticker_id = T.id
                              LEFT JOIN LAST_ALERTS A ON A.ticker_id = T.id
-                             WHERE A.amount IS NULL OR P.price_cnt >= 10)
+                             WHERE A.amount IS NULL OR P.price_cnt >= :minCount)
         SELECT ticker_id,
                currency,
                alert_amount_last,
-               alert_amount_new
+               alert_amount_new,
+               price_lower,
+               price_upper
         FROM NEW_SIGNALS
         WHERE alert_type IS NOT NULL
           AND alert_amount_new > 0
           AND ticker_id IN (:ids)
     """, nativeQuery = true)
     List<AlertSignalRaw> detectAlertSignals(
-            @Param("ids") List<UUID> tickers
+            @Param("ids") List<UUID> tickers,
+            @Param("minCount") int priceMinCount
     );
 
     @Query("""

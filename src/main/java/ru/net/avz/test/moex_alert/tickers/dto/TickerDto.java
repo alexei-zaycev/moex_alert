@@ -2,7 +2,7 @@ package ru.net.avz.test.moex_alert.tickers.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import org.hibernate.validator.constraints.UUID;
+import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
 import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 import ru.net.avz.test.moex_alert.tickers.fields.TickerNameField;
@@ -12,7 +12,7 @@ import ru.net.avz.test.moex_alert.tickers.fields.TickerThresholdField;
 public record TickerDto(
 
         @NotNull
-        @UUID
+        @EntityIdField
         java.util.UUID id,
 
         @NotNull

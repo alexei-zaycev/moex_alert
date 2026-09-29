@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -31,8 +32,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PriceService {
 
-    private static final int RELOAD_PRICES_RATE_MS = 600_000;
-    //    private static final int RELOAD_PRICES_RATE_MS = 60_000;
+    private static final int RELOAD_PRICES_RATE_MINUTES = 10;
+    //    private static final int RELOAD_PRICES_RATE_MINUTES = 1;
+    private static final int SCAN_PRICES_MIN_COUNT = 3;             // ~ 60 / RELOAD_PRICES_RATE_MINUTES / 2
     private static final int RELOAD_PRICES_TIMEOUT_SECONDS = 30;
 
     private final PriceRepository priceRepository;
@@ -42,7 +44,7 @@ public class PriceService {
 
     private static final AtomicBoolean _runningScheduleLoadAndSavePrices = new AtomicBoolean(false);
 
-    @Scheduled(fixedRate = RELOAD_PRICES_RATE_MS)
+    @Scheduled(fixedRate = RELOAD_PRICES_RATE_MINUTES, timeUnit = TimeUnit.MINUTES)
     protected void scheduleLoadAndSavePrices() {
         if (_runningScheduleLoadAndSavePrices.compareAndSet(false, true)) {
             LocalDateTime start = LocalDateTime.now();
@@ -66,11 +68,12 @@ public class PriceService {
             return Mono.fromCallable(tickerService::findAll)
                     .subscribeOn(Schedulers.boundedElastic())
                     .flatMap(this::fetchPricesFromMoex)
+                    .publishOn(Schedulers.boundedElastic())
                     .flatMap(prices -> !prices.isEmpty() ? Mono.just(prices) : Mono.empty())
                     .map(priceRepository::saveAll)
                     .flatMap(prices -> {
                         List<TickerEntity> tickers = prices.stream().map(PriceEntity::getTicker).toList();
-                        return alertService.detectAndSaveAlerts(tickers).thenReturn(prices);
+                        return alertService.detectAndSaveAlerts(tickers, SCAN_PRICES_MIN_COUNT).thenReturn(prices);
                     })
                     .doFinally(signal -> _runningLoadAndSavePrices.set(false));
         } else {
@@ -89,6 +92,7 @@ public class PriceService {
                 .retrieve()
                 .bodyToMono(String.class)
                 .timeout(Duration.ofSeconds(RELOAD_PRICES_TIMEOUT_SECONDS))
+                .publishOn(Schedulers.boundedElastic())
                 .map(xmlResponse -> _parseMoexXml(xmlResponse, tickers))
                 .flatMap(prices -> prices.map(Mono::just).orElseGet(Mono::empty))
                 .onErrorResume(ex -> {

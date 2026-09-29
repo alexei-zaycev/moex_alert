@@ -10,7 +10,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +39,12 @@ public class TickerRestController {
     public PagedModel<TickerDto> getAll(
             @Valid @ParameterObject Pageable pageable
     ) {
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(TickerEntity::getName).ascending().and(Sort.by(TickerEntity::getId).ascending()));
+        }
         Page<TickerEntity> tickers = tickerService.findAll(pageable);
         return new PagedModel<>(tickers.map(TickerDto::of));
     }
@@ -50,8 +58,8 @@ public class TickerRestController {
     public TickerDto getOne(
             @Valid @PathVariable @TickerNameField String name
     ) {
-        TickerEntity entity = tickerService.findByNameOrThrow(name);
-        return TickerDto.of(entity);
+        TickerEntity ticker = tickerService.findByNameOrThrow(name);
+        return TickerDto.of(ticker);
     }
 
     @PostMapping
@@ -64,8 +72,8 @@ public class TickerRestController {
     public TickerDto create(
             @Valid @RequestBody TickerCreateDto dto
     ) {
-        TickerEntity entity = tickerService.create(dto);
-        return TickerDto.of(entity);
+        TickerEntity ticker = tickerService.create(dto);
+        return TickerDto.of(ticker);
     }
 
     @PutMapping("/{name}")
@@ -79,8 +87,8 @@ public class TickerRestController {
             @Valid @PathVariable @TickerNameField String name,
             @Valid @RequestBody TickerUpdateDto dto
     ) {
-        TickerEntity entity = tickerService.update(name, dto);
-        return TickerDto.of(entity);
+        TickerEntity ticker = tickerService.update(name, dto);
+        return TickerDto.of(ticker);
     }
 
     @PatchMapping("/{name}")
@@ -94,8 +102,8 @@ public class TickerRestController {
             @Valid @PathVariable @TickerNameField String name,
             @Valid @RequestBody TickerPatchDto dto
     ) {
-        TickerEntity entity = tickerService.patch(name, dto);
-        return TickerDto.of(entity);
+        TickerEntity ticker = tickerService.patch(name, dto);
+        return TickerDto.of(ticker);
     }
 
     @DeleteMapping("/{name}")

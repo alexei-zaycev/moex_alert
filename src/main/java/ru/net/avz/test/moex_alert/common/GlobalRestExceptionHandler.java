@@ -1,6 +1,8 @@
 package ru.net.avz.test.moex_alert.common;
 
 import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.metadata.ConstraintDescriptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -17,8 +19,10 @@ import ru.net.avz.test.moex_alert.common.exceptions.EntityException;
 import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 import ru.net.avz.test.moex_alert.tickers.exceptions.TickerAlreadyExistsException;
 
+import java.lang.annotation.Annotation;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,10 +64,35 @@ public class GlobalRestExceptionHandler {
                 ex.getBindingResult()
                         .getFieldErrors()
                         .stream()
-                        .map(err -> Stream.of(
-                                        new AbstractMap.SimpleImmutableEntry<String, Object>("field", err.getField()),
-                                        new AbstractMap.SimpleImmutableEntry<String, Object>("code", err.getCode() != null ? err.getCode().toUpperCase() : null),
-                                        new AbstractMap.SimpleImmutableEntry<String, Object>("message", err.getDefaultMessage()))
+                        .map(err -> Stream.<Map.Entry<String, Object>>of(
+                                        new AbstractMap.SimpleImmutableEntry<>("field", err.getField()),
+                                        new AbstractMap.SimpleImmutableEntry<>("code", Optional.ofNullable(err.getCode())
+                                                                                            .map(String::toUpperCase)
+                                                                                            .orElse(null)),
+                                        new AbstractMap.SimpleImmutableEntry<>("message", err.getDefaultMessage()))
+                                .filter(e -> e.getValue() != null)
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
+                        .toArray(),
+                null);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponseException handleValidation(ConstraintViolationException ex) {
+        return _newResponse(
+                HttpStatus.BAD_REQUEST,
+                ErrorCodes.VALIDATION_ERROR,
+                ex.getConstraintViolations()
+                        .stream()
+                        .map(err -> Stream.<Map.Entry<String, Object>>of(
+                                        new AbstractMap.SimpleImmutableEntry<>("field", err.getPropertyPath().toString()),
+                                        new AbstractMap.SimpleImmutableEntry<>("code", Optional.ofNullable(err.getConstraintDescriptor())
+                                                                                            .map(ConstraintDescriptor::getAnnotation)
+                                                                                            .map(Annotation::annotationType)
+                                                                                            .map(Class::getSimpleName)
+                                                                                            .orElse(null)),
+                                        new AbstractMap.SimpleImmutableEntry<>("message", err.getMessage())
+                                )
                                 .filter(e -> e.getValue() != null)
                                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
                         .toArray(),

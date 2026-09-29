@@ -2,7 +2,7 @@ package ru.net.avz.test.moex_alert.prices.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import org.hibernate.validator.constraints.UUID;
+import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
 import ru.net.avz.test.moex_alert.prices.PriceEntity;
 import ru.net.avz.test.moex_alert.prices.fields.PriceAmountField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public record PriceDto(
 
         @NotNull
-        @UUID
+        @EntityIdField
         java.util.UUID id,
 
         @NotNull

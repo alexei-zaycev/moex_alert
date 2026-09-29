@@ -1,10 +1,12 @@
 package ru.net.avz.test.moex_alert.alerts.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import org.hibernate.validator.constraints.UUID;
 import ru.net.avz.test.moex_alert.alerts.AlertEntity;
+import ru.net.avz.test.moex_alert.alerts.fields.AlertDiffField;
+import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceAmountField;
 import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
 import ru.net.avz.test.moex_alert.tickers.fields.TickerNameField;
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
 public record AlertWebSocketDto(
 
         @NotNull
-        @UUID
+        @EntityIdField
         java.util.UUID id,
 
         @NotNull
@@ -31,6 +33,10 @@ public record AlertWebSocketDto(
         @PriceAmountField
         BigDecimal amount,
 
+        @Nullable
+        @AlertDiffField
+        Float diff,
+
         @NotNull
         @PriceCurrencyField
         String currency
@@ -42,6 +48,7 @@ public record AlertWebSocketDto(
                 .ticker(alert.getTicker().getName())
                 .ts(alert.getTs())
                 .amount(alert.getAmount())
+                .diff(alert.getDiff())
                 .currency(alert.getCurrency())
                 .build();
     }

@@ -60,6 +60,11 @@ public class AlertEntity {
     @Getter
     private BigDecimal amount;
 
+    @Column
+    @Nullable
+    @Getter
+    private Float diff;
+
     @Column(length = 3)
     @NotNull
     @Getter
