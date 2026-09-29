@@ -101,7 +101,7 @@ public class PriceService {
                 });
     }
 
-    private Optional<List<PriceEntity>> _parseMoexXml(
+    protected Optional<List<PriceEntity>> _parseMoexXml(
             String xml,
             List<TickerEntity> tickers
     ) {

@@ -24,7 +24,9 @@ public class TickerService {
         return tickerRepository.findAll();
     }
 
-    public Page<TickerEntity> findAll(Pageable pageable) {
+    public Page<TickerEntity> findAll(
+            Pageable pageable
+    ) {
         return tickerRepository.findAll(pageable);
     }
 

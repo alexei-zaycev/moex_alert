@@ -41,7 +41,7 @@ public class AlertWebSocketHandler extends TextWebSocketHandler {
     ) {
         session.getAttributes().put(AlertWebSocketHandler._ATTR_KEY_LOCK, new ReentrantLock());
         sessions.put(session.getId(), session);
-        log.debug("WebSocket connection established. Active {} sessions", sessions.size());
+        log.info("WebSocket connection established. Active {} sessions", sessions.size());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class AlertWebSocketHandler extends TextWebSocketHandler {
     ) {
         sessions.remove(session.getId());
         session.getAttributes().remove(AlertWebSocketHandler._ATTR_KEY_LOCK);
-        log.debug("WebSocket connection closed. Active {} sessions", sessions.size());
+        log.info("WebSocket connection closed. Active {} sessions", sessions.size());
     }
 
     public boolean broadcastAlert(
@@ -98,7 +98,7 @@ public class AlertWebSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        log.debug("Alert {} broadcasted to {} sessions", alert.getId(), success);
+        log.info("Alert {} broadcasted to {} sessions", alert.getId(), success);
 
         return success > 0;
     }

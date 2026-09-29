@@ -1,6 +1,5 @@
 package ru.net.avz.test.moex_alert.alerts;
 
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,9 +34,11 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final TickerService tickerService;
-    private final AlertWebSocketHandler alertWebSocketHandler;
+    private final AlertSenderService alertSenderService;
 
-    public Page<AlertEntity> findAll(Pageable pageable) {
+    public Page<AlertEntity> findAll(
+            Pageable pageable
+    ) {
         return alertRepository.findAll(pageable);
     }
 
@@ -58,7 +59,8 @@ public class AlertService {
             Mono.fromCallable(() -> alertRepository.findReadyForResendAlerts(LocalDateTime.now()))
                     .subscribeOn(Schedulers.boundedElastic())
                     .flatMapMany(Flux::fromIterable)
-                    .flatMap(this::trySendAlert)
+                    .flatMap(alert -> Mono.fromFuture(alertSenderService.trySendAlertAsync(alert)), 1)     // ASYNC, ждем выполнения
+//                    .flatMap(alertSenderService::trySendAlertReactive, 1)   // REACTIVE, ждем выполнения
                     .collectList()
                     .doOnSuccess(flags -> log.debug("✅ Alerts resend job completed, processed {} (duration: {} ms)",
                             flags != null ? flags.stream().filter(isSent -> isSent).count() : 0,
@@ -93,25 +95,41 @@ public class AlertService {
                     .subscribeOn(Schedulers.boundedElastic())
                     .flatMap(signals -> !signals.isEmpty() ? Mono.just(signals) : Mono.empty())
                     .flatMapMany(Flux::fromIterable)
-                    .map(signal -> Tuples.of(signal,
-                            AlertEntity.builder()
-                                    .ticker(tickers.stream().filter(ticker -> ticker.getId().equals(signal.getTickerId())).findAny().orElseThrow())
-                                    .ts(LocalDateTime.now())
-                                    .amount(signal.getAlertAmountNew())
-                                    .diff(signal.getAlertAmountLast() == null ? null : Math.max(0f, Math.min(100f,
-                                            BigDecimal.valueOf(100.00).multiply(
-                                                    signal.getPriceUpper().subtract(signal.getAlertAmountLast()).max(
-                                                    signal.getAlertAmountLast().subtract(signal.getPriceLower()))
-                                            ).divide(signal.getAlertAmountLast(), 2, RoundingMode.CEILING).floatValue())))
-                                    .currency(signal.getCurrency())
-                                    .sendAttempts(0)
-                                    .nextSendAfter(signal.getAlertAmountLast() == null
-                                            ? null
-                                            : LocalDateTime.now())
-                                    .sentAt(signal.getAlertAmountLast() == null
-                                            ? LocalDateTime.now()
-                                            : null)
-                                    .build()))
+                    .map(signal -> {
+
+                        Float diff = null;
+                        if (signal.getAlertAmountLast() != null) {
+                            BigDecimal diffUp = signal.getPriceUpper().subtract(signal.getAlertAmountLast());
+                            BigDecimal diffDown = signal.getAlertAmountLast().subtract(signal.getPriceLower());
+                            diff = BigDecimal.valueOf((diffUp.compareTo(diffDown) >= 0 ? 1 : -1) * 100.00).multiply(
+                                    diffUp.max(diffDown)
+                            ).divide(signal.getAlertAmountLast(), 2, RoundingMode.CEILING).floatValue();
+                        }
+
+                        TickerEntity ticker =
+                                tickers.stream()
+                                        .filter(t -> t.getId().equals(signal.getTickerId()))
+                                        .findAny()
+                                        .orElseThrow();
+
+                        AlertEntity alert =
+                                AlertEntity.builder()
+                                        .ticker(ticker)
+                                        .ts(LocalDateTime.now())
+                                        .amount(signal.getAlertAmountNew())
+                                        .diff(diff)
+                                        .currency(signal.getCurrency())
+                                        .sendAttempts(0)
+                                        .nextSendAfter(signal.getAlertAmountLast() == null
+                                                ? null
+                                                : LocalDateTime.now())
+                                        .sentAt(signal.getAlertAmountLast() == null
+                                                ? LocalDateTime.now()
+                                                : null)
+                                        .build();
+
+                        return Tuples.of(signal, alert);
+                    })
                     .collectList()
                     .map(t -> {
                         List<AlertEntity> alerts = alertRepository.saveAll(t.stream().map(Tuple2::getT2).toList());
@@ -136,59 +154,12 @@ public class AlertService {
                     })
                     .flatMapMany(Flux::fromIterable)
                     .filter(alert -> alert.getSentAt() == null && alert.getNextSendAfter() != null)
-                    .flatMap(alert -> this.trySendAlert(alert).thenReturn(alert), 1)
+                    .doOnNext(alertSenderService::trySendAlertAsync)          // ASYNC, НЕ ждем выполнения
+//                    .doOnNext(alert -> alertSenderService.trySendAlertReactive(alert).subscribe())   // REACTIVE, НЕ ждем выполнения
                     .collectList()
                     .doFinally(signal -> _runningDetectAndSaveAlerts.set(false));
         } else {
             return Mono.empty();
         }
-    }
-
-    protected Mono<Boolean> trySendAlert(
-            AlertEntity alert
-    ) {
-        if (alert.getSentAt() != null || alert.getNextSendAfter() == null) {
-            return Mono.empty();
-        }
-        return _sendAlert(alert)
-                .publishOn(Schedulers.boundedElastic())
-                .map(isSent -> {
-                    if (isSent) {
-                        alertRepository.markAlertAsSent(
-                                alert.getId(),
-                                LocalDateTime.now());
-                    } else {
-                        alertRepository.markAlertAsNotSent(
-                                alert.getId(),
-                                alert.getSendAttempts(),
-                                _generateNextSendAfter(alert.getSendAttempts()));
-                    }
-                    return isSent;
-                })
-                .onErrorResume(ex -> {
-                    log.error("Error sending alert {}", alert.getId(), ex);
-                    return Mono.just(false);
-                });
-    }
-
-    private @Nullable LocalDateTime _generateNextSendAfter(
-            int attempts
-    ) {
-        if (attempts < 5) {
-            return LocalDateTime.now().plusMinutes(1);
-        } else if (attempts < 10) {
-            return LocalDateTime.now().plusMinutes(5);
-        } else if (attempts < 20) {
-            return LocalDateTime.now().plusMinutes(10);
-        } else {
-            return null;
-        }
-    }
-
-    private Mono<Boolean> _sendAlert(
-            AlertEntity alert
-    ) {
-        return Mono.fromCallable(() -> alertWebSocketHandler.broadcastAlert(alert))
-                .subscribeOn(Schedulers.boundedElastic());
     }
 }
