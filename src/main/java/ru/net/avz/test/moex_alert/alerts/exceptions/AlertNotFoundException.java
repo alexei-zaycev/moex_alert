@@ -6,7 +6,8 @@ import ru.net.avz.test.moex_alert.common.exceptions.EntityException;
 
 import java.util.UUID;
 
-public class AlertNotFoundException extends EntityException {
+public class AlertNotFoundException
+        extends EntityException {
 
     public static final HttpStatus HTTP_STATUS = HttpStatus.NOT_FOUND;
 

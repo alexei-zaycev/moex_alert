@@ -9,5 +9,6 @@ public interface ErrorCodes {
 
     String TICKER_NOT_FOUND = "ticker_not_found";
     String TICKER_ALREADY_EXISTS = "ticker_already_exists";
+
     String ALERT_NOT_FOUND = "alert_not_found";
 }

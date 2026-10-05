@@ -27,7 +27,8 @@ interface AlertSignalRaw {
     BigDecimal getPriceUpper();
 }
 
-interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
+public interface AlertRepository
+        extends JpaRepository<AlertEntity, UUID> {
 
     @Query(value = """
         WITH PRICES_STATS AS (SELECT P.ticker_id,

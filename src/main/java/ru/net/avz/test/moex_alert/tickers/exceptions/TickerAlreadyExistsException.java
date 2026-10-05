@@ -4,7 +4,8 @@ import org.springframework.http.HttpStatus;
 import ru.net.avz.test.moex_alert.common.ErrorCodes;
 import ru.net.avz.test.moex_alert.common.exceptions.EntityException;
 
-public class TickerAlreadyExistsException extends EntityException {
+public class TickerAlreadyExistsException
+        extends EntityException {
 
     public static final HttpStatus HTTP_STATUS = HttpStatus.CONFLICT;
 

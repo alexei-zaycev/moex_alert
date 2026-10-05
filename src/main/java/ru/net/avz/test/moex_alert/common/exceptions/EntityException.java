@@ -3,7 +3,8 @@ package ru.net.avz.test.moex_alert.common.exceptions;
 import lombok.Getter;
 import org.springframework.http.HttpStatusCode;
 
-public class EntityException extends RuntimeException {
+public class EntityException
+        extends RuntimeException {
 
     @Getter
     private final HttpStatusCode httpStatus;

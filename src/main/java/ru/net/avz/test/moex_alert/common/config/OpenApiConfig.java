@@ -38,9 +38,9 @@ public class OpenApiConfig {
 //                .schemaRequirement("bearer-key", new io.swagger.v3.oas.models.security.SecurityScheme());
     }
 
-    private OpenApiCustomizer _openApiCustomizer(
-            WebSocketEndpointSpec endpoint
-    ) {
+    private OpenApiCustomizer _openApiWebSocketCustomizer(
+            WebSocketEndpointSpec endpoint) {
+
         return openApi -> {
 
             boolean openapi31 = openApi.getSpecVersion() == SpecVersion.V31;
@@ -78,7 +78,7 @@ public class OpenApiConfig {
 
     @Bean
     public OpenApiCustomizer wsAlertsOpenApi() {
-        return _openApiCustomizer(AlertWebSocketHandler.ENDPOINT);
+        return _openApiWebSocketCustomizer(AlertWebSocketHandler.ENDPOINT);
     }
 
     @Bean
