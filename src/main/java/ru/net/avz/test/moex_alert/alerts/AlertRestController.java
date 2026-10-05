@@ -36,8 +36,8 @@ public class AlertRestController {
     @Operation(operationId = "getAllAlerts", summary = "Получение списка оповещений")
     @ResponseStatus(HttpStatus.OK)
     public PagedModel<AlertDto> getAll(
-            @Valid @ParameterObject Pageable pageable
-    ) {
+            @Valid @ParameterObject Pageable pageable) {
+
         if (pageable.getSort().isUnsorted()) {
             pageable = PageRequest.of(
                     pageable.getPageNumber(),
@@ -55,8 +55,8 @@ public class AlertRestController {
             @ApiResponse(responseCode = "404", description = "Оповещение не найдено", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     public AlertDto getOne(
-            @Valid @PathVariable @EntityIdField String id
-    ) {
+            @Valid @PathVariable @EntityIdField String id) {
+
         AlertEntity alert = alertService.findByIdOrThrow(UUID.fromString(id));
         return AlertDto.of(alert);
     }

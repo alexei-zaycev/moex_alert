@@ -15,7 +15,7 @@ import org.springdoc.core.customizers.PropertyCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotatedElementUtils;
-import ru.net.avz.test.moex_alert.alerts.AlertWebSocketHandler;
+import ru.net.avz.test.moex_alert.alerts.sender.AlertWebSocketHandler;
 import ru.net.avz.test.moex_alert.common.WebSocketEndpointSpec;
 
 import java.lang.annotation.Annotation;

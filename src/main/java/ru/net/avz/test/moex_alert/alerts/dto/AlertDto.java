@@ -38,16 +38,6 @@ public record AlertDto(
         @PriceCurrencyField
         String currency
 
-//        @NotNull
-//        @AlertSendAttemptsField
-//        Integer sendAttempts,
-//
-//        @Nullable
-//        LocalDateTime nextSendAfter,
-//
-//        @Nullable
-//        LocalDateTime sentAt,
-
 ) {
     public static AlertDto of(AlertEntity alert) {
         return AlertDto.builder()
@@ -57,9 +47,6 @@ public record AlertDto(
                 .amount(alert.getAmount())
                 .diff(alert.getDiff())
                 .currency(alert.getCurrency())
-//                .sendAttempts(alert.getSendAttempts())
-//                .nextSendAfter(alert.getNextSendAfter())
-//                .sentAt(alert.getSentAt())
                 .build();
     }
 }

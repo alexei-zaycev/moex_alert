@@ -37,8 +37,8 @@ public class TickerRestController {
     @Operation(operationId = "getAllTickers", summary = "Получение списка тикеров")
     @ResponseStatus(HttpStatus.OK)
     public PagedModel<TickerDto> getAll(
-            @Valid @ParameterObject Pageable pageable
-    ) {
+            @Valid @ParameterObject Pageable pageable) {
+
         if (pageable.getSort().isUnsorted()) {
             pageable = PageRequest.of(
                     pageable.getPageNumber(),
@@ -56,8 +56,8 @@ public class TickerRestController {
             @ApiResponse(responseCode = "404", description = "Тикер не найден", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     public TickerDto getOne(
-            @Valid @PathVariable @TickerNameField String name
-    ) {
+            @Valid @PathVariable @TickerNameField String name) {
+
         TickerEntity ticker = tickerService.findByNameOrThrow(name);
         return TickerDto.of(ticker);
     }
@@ -70,8 +70,8 @@ public class TickerRestController {
             @ApiResponse(responseCode = "400", description = "Ошибка формата", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     public TickerDto create(
-            @Valid @RequestBody TickerCreateDto dto
-    ) {
+            @Valid @RequestBody TickerCreateDto dto) {
+
         TickerEntity ticker = tickerService.create(dto);
         return TickerDto.of(ticker);
     }
@@ -85,8 +85,8 @@ public class TickerRestController {
     })
     public TickerDto update(
             @Valid @PathVariable @TickerNameField String name,
-            @Valid @RequestBody TickerUpdateDto dto
-    ) {
+            @Valid @RequestBody TickerUpdateDto dto) {
+
         TickerEntity ticker = tickerService.update(name, dto);
         return TickerDto.of(ticker);
     }
@@ -100,8 +100,8 @@ public class TickerRestController {
     })
     public TickerDto patch(
             @Valid @PathVariable @TickerNameField String name,
-            @Valid @RequestBody TickerPatchDto dto
-    ) {
+            @Valid @RequestBody TickerPatchDto dto) {
+
         TickerEntity ticker = tickerService.patch(name, dto);
         return TickerDto.of(ticker);
     }
@@ -113,8 +113,8 @@ public class TickerRestController {
             @ApiResponse(responseCode = "404", description = "Тикер не найден", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     public void delete(
-            @Valid @PathVariable @TickerNameField String name
-    ) {
+            @Valid @PathVariable @TickerNameField String name) {
+
         tickerService.delete(name);
     }
 }

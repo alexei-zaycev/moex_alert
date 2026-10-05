@@ -60,6 +60,7 @@ public class AlertEntity {
     @Getter
     private BigDecimal amount;
 
+    /** Вспомогательное поле для визуализации процентного движения */
     @Column
     @Nullable
     @Getter

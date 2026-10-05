@@ -25,52 +25,52 @@ public class TickerService {
     }
 
     public Page<TickerEntity> findAll(
-            Pageable pageable
-    ) {
+            Pageable pageable) {
+
         return tickerRepository.findAll(pageable);
     }
 
     public TickerEntity findByNameOrThrow(
-            String tickerName
-    ) {
+            String tickerName) {
+
         return tickerRepository.findByName(tickerName)
                 .orElseThrow(() -> new TickerNotFoundException(tickerName));
     }
 
     @Transactional
     public TickerEntity create(
-            TickerCreateDto tickerNew
-    ) {
+            TickerCreateDto tickerNew) {
+
         Optional<TickerEntity> tickerCurrent = tickerRepository.findByName(tickerNew.name());
         if (tickerCurrent.isPresent()) {
             throw new TickerAlreadyExistsException(tickerNew.name());
         } else {
-            return tickerRepository.saveAndFlush(tickerNew.toBuilder().build());
+            return tickerRepository.save(tickerNew.toBuilder().build());
         }
     }
 
     @Transactional
     public TickerEntity update(
             String tickerName,
-            TickerUpdateDto tickerNew
-    ) {
+            TickerUpdateDto tickerNew) {
+
         TickerEntity tickerCurrent = findByNameOrThrow(tickerName);
-        return tickerRepository.saveAndFlush(tickerNew.applyTo(tickerCurrent).build());
+        return tickerRepository.save(tickerNew.applyTo(tickerCurrent).build());
     }
 
     @Transactional
     public TickerEntity patch(
             String tickerName,
-            TickerPatchDto tickerPatch
-    ) {
+            TickerPatchDto tickerPatch) {
+
         TickerEntity tickerCurrent = findByNameOrThrow(tickerName);
-        return tickerRepository.saveAndFlush(tickerPatch.applyTo(tickerCurrent).build());
+        return tickerRepository.save(tickerPatch.applyTo(tickerCurrent).build());
     }
 
     @Transactional
     public void delete(
-            String tickerName
-    ) {
+            String tickerName) {
+
         TickerEntity tickerCurrent = findByNameOrThrow(tickerName);
         tickerRepository.deleteById(tickerCurrent.getId());
     }

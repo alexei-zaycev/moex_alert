@@ -1,7 +1,6 @@
 package ru.net.avz.test.moex_alert.alerts;
 
 import jakarta.annotation.Nullable;
-import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +17,7 @@ interface AlertSignalRaw {
 
     String getCurrency();
 
-    /** если NULL - то значит это технический якорь */
+    /** Если NULL - то значит это технический якорь */
     @Nullable BigDecimal getAlertAmountLast();
 
     BigDecimal getAlertAmountNew();
@@ -88,7 +87,6 @@ interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
             @Param("ts") LocalDateTime ts
     );
 
-    @Transactional
     @Modifying
     @Query("""
         UPDATE AlertEntity a
@@ -103,7 +101,6 @@ interface AlertRepository extends JpaRepository<AlertEntity, UUID> {
             @Param("sentAt") LocalDateTime sentAt
     );
 
-    @Transactional
     @Modifying
     @Query("""
         UPDATE AlertEntity a
