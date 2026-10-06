@@ -8,13 +8,14 @@
 4. **Анализ трендов:** Нативная SQL-логика генерации алертов при выходе цены за границы коридора
 5. **WebSocket оповещения:** Потоковая доставка сигналов в реальном времени
    - WebSocket: `ws://localhost:8082/ws/alerts`
-6. **Проверка здоровья:** Эндпоинт мониторинга состояния `/actuator/health` (Spring Boot Actuator)
-7. **Автоматический сидинг:** Автоматическое добавление тикеров `SBER`, `YDEX`, `X5` с порогом `0.1` при первом запуске через Flyway-миграцию
+6. **Кэширование:** Caffeine в качестве провайдера L2-кэша для Hibernate
+7. **Проверка здоровья:** Эндпоинт мониторинга состояния `/actuator/health` (Spring Boot Actuator)
+8. **Автоматический сидинг:** добавление тикеров `SBER`, `YDEX`, `X5` с порогом `0.1` при первом запуске через Flyway-миграцию
 
 ---
 
 ## Стек технологий
-- **бэкенд:** Java 25, Spring Boot 4 / Actuator / Data JPA / WebMVC / WebSocket, Flyway, Lombok
+- **бэкенд:** Java 25, Spring Boot 4 / Actuator / Data JPA / WebMVC / WebSocket, Flyway, Caffeine, Lombok
 - **база данных:** PostgreSQL 15
 - **контейнеризация:** Docker, Docker Compose (multi-stage build)
 
