@@ -1,5 +1,6 @@
 package ru.net.avz.test.moex_alert.alerts.sender;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -25,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class AlertWebSocketHandler
         extends TextWebSocketHandler {
@@ -42,18 +44,10 @@ public class AlertWebSocketHandler
     private static final Duration SEND_TIMEOUT = Duration.ofSeconds(5);
     private static final String ATTR_KEY_LOCK = "lock";
 
-    private final AsyncTaskExecutor taskExecutor;
+    @Qualifier("alertsExecutor") private final AsyncTaskExecutor taskExecutor;
     private final ObjectMapper jsonMapper;
 
     private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
-
-    public AlertWebSocketHandler(
-            @Qualifier("alertsExecutor") AsyncTaskExecutor taskExecutor,
-            ObjectMapper jsonMapper) {
-
-        this.taskExecutor = taskExecutor;
-        this.jsonMapper = jsonMapper;
-    }
 
     @Override
     public void afterConnectionEstablished(
