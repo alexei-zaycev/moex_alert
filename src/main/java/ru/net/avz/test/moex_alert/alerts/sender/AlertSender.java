@@ -5,7 +5,7 @@ import ru.net.avz.test.moex_alert.alerts.AlertEntity;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * интеграция с доставкой оповещений
+ * Интеграция с доставкой оповещений
  */
 public interface AlertSender {
 

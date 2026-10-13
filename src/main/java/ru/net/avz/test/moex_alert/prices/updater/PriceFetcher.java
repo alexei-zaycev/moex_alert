@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * интеграция с источником цен
+ * Интеграция с источником цен
  */
 public interface PriceFetcher {
 

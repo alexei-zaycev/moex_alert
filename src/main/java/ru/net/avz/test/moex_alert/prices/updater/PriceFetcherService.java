@@ -44,7 +44,7 @@ public class PriceFetcherService
     public List<PriceEntity> loadAndSavePrices()
             throws PriceFetchException {
 
-        return loadAndSavePrices(DEFAULT_READ_TIMEOUT);
+        return loadAndSavePrices(DEFAULT_READ_TIMEOUT);     // валидный self-invocation
     }
 
     @Override
@@ -94,7 +94,7 @@ public class PriceFetcherService
                     .requestFactory(requestFactory)
                     .build()
                     .get()
-                    .uri("https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.xml?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,LAST,LCURRENTPRICE")
+                    .uri("http://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.xml?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,LAST,LCURRENTPRICE")
                     .retrieve()
                     .body(String.class);
 

@@ -99,7 +99,7 @@ public class AlertService {
         List<TickerEntity> tickers = tickerService.findAll();
         if (tickers.isEmpty()) return List.of();
 
-        return detectAndSaveAlerts(tickers, priceMinCount);
+        return detectAndSaveAlerts(tickers, priceMinCount);     // валидный self-invocation
     }
 
     @ConcurrencyLimit(limit = 1, policy = ConcurrencyLimit.ThrottlePolicy.BLOCK)

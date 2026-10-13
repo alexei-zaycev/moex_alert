@@ -6,14 +6,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import ru.net.avz.test.moex_alert.common.AbstractEntity;
 import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Builder(toBuilder = true)
@@ -21,27 +19,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = "alerts")
 @EntityListeners(AuditingEntityListener.class)
-public class AlertEntity {
-
-    // <editor-fold defaultstate="collapsed" desc="id / createdAt / updatedAt">
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Getter
-    private UUID id;
-
-    @CreatedDate
-    @Column(updatable = false)
-    @NotNull
-    @Getter
-    private LocalDateTime createdAt;
-
-    @Version
-    @LastModifiedDate
-    @Column
-    @NotNull
-    @Getter
-    private LocalDateTime updatedAt;
-    // </editor-fold>
+public class AlertEntity
+        extends AbstractEntity {
 
     @JoinColumn(name = "ticker_id")
     @ManyToOne(fetch = FetchType.LAZY)

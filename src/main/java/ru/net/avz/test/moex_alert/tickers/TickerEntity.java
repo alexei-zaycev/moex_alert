@@ -1,6 +1,9 @@
 package ru.net.avz.test.moex_alert.tickers;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,12 +11,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import ru.net.avz.test.moex_alert.common.AbstractEntity;
 
 @Entity
 @Builder(toBuilder = true)
@@ -22,27 +21,8 @@ import java.util.UUID;
 @Table(name = "tickers")
 @Cache(region = "ticker-entity-cache", usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @EntityListeners(AuditingEntityListener.class)
-public class TickerEntity {
-
-    // <editor-fold defaultstate="collapsed" desc="id / createdAt / updatedAt">
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Getter
-    private UUID id;
-
-    @CreatedDate
-    @Column(updatable = false)
-    @NotNull
-    @Getter
-    private LocalDateTime createdAt;
-
-    @Version
-    @LastModifiedDate
-    @Column
-    @NotNull
-    @Getter
-    private LocalDateTime updatedAt;
-    // </editor-fold>
+public class TickerEntity
+        extends AbstractEntity {
 
     @Column(length = 10, unique = true)
     @NotNull
