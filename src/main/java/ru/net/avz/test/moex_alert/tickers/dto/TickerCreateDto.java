@@ -16,7 +16,7 @@ public record TickerCreateDto(
         Float threshold
 
 ){
-    public TickerEntity.TickerEntityBuilder toBuilder() {
+    public TickerEntity.TickerEntityBuilder<?, ?> toBuilder() {
         return TickerEntity.builder()
                 .name(this.name())
                 .threshold(this.threshold())

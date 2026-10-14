@@ -16,7 +16,7 @@ public record TickerUpdateDto(
         Float threshold
 
 ){
-    public TickerEntity.TickerEntityBuilder applyTo(TickerEntity ticker) {
+    public TickerEntity.TickerEntityBuilder<?, ?> applyTo(TickerEntity ticker) {
         return ticker.toBuilder()
                 .name(this.name())
                 .threshold(this.threshold());

@@ -94,13 +94,10 @@ public class AlertWebSocketHandler
     protected CompletableFuture<TextMessage> _buildMessage(
             AlertEntity alert) {
 
-        return CompletableFuture.<TextMessage>supplyAsync(() -> {
-
-            return new TextMessage(
-                    jsonMapper.writeValueAsString(
-                            new AlertWebSocketDto(alert)));
-
-        });
+        return CompletableFuture.supplyAsync(() ->
+                new TextMessage(
+                        jsonMapper.writeValueAsString(
+                                new AlertWebSocketDto(alert))));
     }
 
     protected CompletableFuture<List<Boolean>> _sendBroadcast(
@@ -125,7 +122,7 @@ public class AlertWebSocketHandler
             AlertEntity alert,
             TextMessage message) {
 
-        return CompletableFuture.<Boolean>supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
                     if (session.isOpen()) {
                         ReentrantLock lock = Objects.requireNonNull((ReentrantLock) session.getAttributes().get(ATTR_KEY_LOCK));
                         try {

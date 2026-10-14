@@ -19,7 +19,7 @@ class TickerCreateDtoTest {
                 NAME,
                 THRESHOLD);
 
-        TickerEntity.TickerEntityBuilder builder = dto.toBuilder();
+        TickerEntity.TickerEntityBuilder<?, ?> builder = dto.toBuilder();
         assertNotNull(builder);
 
         TickerEntity createdEntity = builder.build();

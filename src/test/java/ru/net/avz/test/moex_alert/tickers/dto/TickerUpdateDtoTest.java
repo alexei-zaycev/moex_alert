@@ -23,7 +23,7 @@ class TickerUpdateDtoTest {
                 NAME,
                 THRESHOLD);
 
-        TickerEntity.TickerEntityBuilder builder = dto.applyTo(ticker);
+        TickerEntity.TickerEntityBuilder<?, ?> builder = dto.applyTo(ticker);
         assertNotNull(builder);
 
         TickerEntity updatedEntity = builder.build();

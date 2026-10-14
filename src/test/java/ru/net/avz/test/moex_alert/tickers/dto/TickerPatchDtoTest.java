@@ -28,7 +28,7 @@ class TickerPatchDtoTest {
                     NAME,
                     THRESHOLD);
 
-            TickerEntity.TickerEntityBuilder builder = dto.applyTo(ticker);
+            TickerEntity.TickerEntityBuilder<?, ?> builder = dto.applyTo(ticker);
             assertNotNull(builder);
 
             TickerEntity updatedEntity = builder.build();
@@ -47,7 +47,7 @@ class TickerPatchDtoTest {
                     NAME,
                     null);
 
-            TickerEntity.TickerEntityBuilder builder = dto.applyTo(ticker);
+            TickerEntity.TickerEntityBuilder<?, ?> builder = dto.applyTo(ticker);
             assertNotNull(builder);
 
             TickerEntity updatedEntity = builder.build();
@@ -66,7 +66,7 @@ class TickerPatchDtoTest {
                     null,
                     THRESHOLD);
 
-            TickerEntity.TickerEntityBuilder builder = dto.applyTo(ticker);
+            TickerEntity.TickerEntityBuilder<?, ?> builder = dto.applyTo(ticker);
             assertNotNull(builder);
 
             TickerEntity updatedEntity = builder.build();

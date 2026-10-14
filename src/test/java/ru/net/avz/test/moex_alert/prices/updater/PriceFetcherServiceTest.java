@@ -20,8 +20,6 @@ import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 import ru.net.avz.test.moex_alert.tickers.TickerService;
 
 import javax.xml.stream.XMLStreamException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Comparator;
@@ -96,7 +94,7 @@ class PriceFetcherServiceTest {
                     .thenComparing(PriceEntity::getCurrency);
 
     private static final String MALFORMED_XML = """
-        <?xml version=\"1.0\"?><response><rows><row SECID=\"SBER\"
+        <?xml version="1.0"?><response><rows><row SECID="SBER"
     """;
 
     private static final String INVALID_LAST_XML = """
@@ -122,7 +120,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should throw PriceFetchException wrapping XMLStreamException from _parseMoexXml")
-        void shouldThrowPriceFetchExceptionWrappingXmlStreamException() throws Exception {
+        void shouldThrowPriceFetchExceptionWrappingXmlStreamException() {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             PriceFetcherService spy = spy(priceFetcherService);
             doReturn(MALFORMED_XML).when(spy)._fetchPricesFromMoex(any(Duration.class));
@@ -133,7 +131,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should throw PriceFetchException wrapping NumberFormatException from _parseMoexXml")
-        void shouldThrowPriceFetchExceptionWrappingNumberFormatException() throws Exception {
+        void shouldThrowPriceFetchExceptionWrappingNumberFormatException() {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             PriceFetcherService spy = spy(priceFetcherService);
             doReturn(INVALID_LAST_XML).when(spy)._fetchPricesFromMoex(any(Duration.class));
