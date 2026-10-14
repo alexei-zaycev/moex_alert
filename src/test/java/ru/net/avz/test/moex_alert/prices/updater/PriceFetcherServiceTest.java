@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.transaction.support.TransactionCallback;
@@ -79,13 +78,13 @@ class PriceFetcherServiceTest {
     private static final PriceEntity VALID_PRICE_1 =
             TestHelper.createPriceBuilder(VALID_TICKER_1)
                     .amount(new BigDecimal("286.21"))
-                    .currency("RUB")
+                    .currency(TestHelper.DEFAULT_CURRENCY)
                     .build();
 
     private static final PriceEntity VALID_PRICE_2 =
             TestHelper.createPriceBuilder(VALID_TICKER_2)
                     .amount(new BigDecimal("105.48"))
-                    .currency("RUB")
+                    .currency(TestHelper.DEFAULT_CURRENCY)
                     .build();
 
     private final Comparator<PriceEntity> priceComparator =
@@ -310,8 +309,8 @@ class PriceFetcherServiceTest {
             List<PriceEntity> result = priceFetcherService.loadAndSavePrices();
             assertThat(result).isEmpty();
 
-            verify(priceRepository, Mockito.never()).saveAll(any());
-            verify(tx, Mockito.never()).execute(any());
+            verify(priceRepository, never()).saveAll(any());
+            verify(tx, never()).execute(any());
         }
 
         @Test
@@ -328,8 +327,8 @@ class PriceFetcherServiceTest {
             List<PriceEntity> result = spy.loadAndSavePrices();
             assertThat(result).isEmpty();
 
-            verify(priceRepository, Mockito.never()).saveAll(any());
-            verify(tx, Mockito.never()).execute(any());
+            verify(priceRepository, never()).saveAll(any());
+            verify(tx, never()).execute(any());
         }
 
         @Test
@@ -350,8 +349,8 @@ class PriceFetcherServiceTest {
                     .usingElementComparator(priceComparator)
                     .containsExactlyInAnyOrder(VALID_PRICE_1, VALID_PRICE_2);
 
-            verify(priceRepository, Mockito.times(1)).saveAll(pricesCaptor.capture());
-            verify(tx, Mockito.times(1)).execute(any());
+            verify(priceRepository, times(1)).saveAll(pricesCaptor.capture());
+            verify(tx, times(1)).execute(any());
             assertThat(pricesCaptor.getValue())
                     .hasSize(2)
                     .usingElementComparator(priceComparator)
@@ -379,7 +378,7 @@ class PriceFetcherServiceTest {
                     .containsExactlyInAnyOrder(VALID_PRICE_1);
 
             verify(priceRepository, times(1)).saveAll(pricesCaptor.capture());
-            verify(tx, Mockito.times(1)).execute(any());
+            verify(tx, times(1)).execute(any());
             assertThat(pricesCaptor.getValue())
                     .hasSize(1)
                     .usingElementComparator(priceComparator)

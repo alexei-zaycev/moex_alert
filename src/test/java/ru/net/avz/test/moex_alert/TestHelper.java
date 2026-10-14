@@ -9,9 +9,11 @@ import java.time.LocalDateTime;
 
 public interface TestHelper {
 
+    String DEFAULT_CURRENCY = "RUB";
+
     String TICKER_DEFAULT_NAME = "SBER";
     Float TICKER_DEFAULT_THRESHOLD = 0.12f;
-    String TICKER_DEFAULT_CURRENCY = "RUB";
+    String TICKER_DEFAULT_CURRENCY = DEFAULT_CURRENCY;
 
     static TickerEntity.TickerEntityBuilder<?, ?> createTickerBuilder() {
         return TickerEntity.builder()
