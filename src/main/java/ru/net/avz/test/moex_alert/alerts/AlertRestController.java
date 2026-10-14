@@ -45,7 +45,7 @@ public class AlertRestController {
                     Sort.by(AlertEntity::getTs).ascending().and(Sort.by(AlertEntity::getId).ascending()));
         }
         Page<AlertEntity> alerts = alertService.findAll(pageable);
-        return new PagedModel<>(alerts.map(AlertDto::of));
+        return new PagedModel<>(alerts.map(AlertDto::new));
     }
 
     @GetMapping("/{id}")
@@ -58,6 +58,6 @@ public class AlertRestController {
             @Valid @PathVariable @EntityIdField String id) {
 
         AlertEntity alert = alertService.findByIdOrThrow(UUID.fromString(id));
-        return AlertDto.of(alert);
+        return new AlertDto(alert);
     }
 }

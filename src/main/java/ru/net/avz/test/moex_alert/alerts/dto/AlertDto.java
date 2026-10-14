@@ -2,51 +2,43 @@ package ru.net.avz.test.moex_alert.alerts.dto;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import ru.net.avz.test.moex_alert.alerts.AlertEntity;
 import ru.net.avz.test.moex_alert.alerts.fields.AlertDiffField;
-import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
-import ru.net.avz.test.moex_alert.prices.fields.PriceAmountField;
-import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
+import ru.net.avz.test.moex_alert.common.dto.AbstractDto;
+import ru.net.avz.test.moex_alert.common.fields.SumAmountField;
+import ru.net.avz.test.moex_alert.common.fields.SumCurrencyField;
 import ru.net.avz.test.moex_alert.tickers.dto.TickerDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Builder
-public record AlertDto(
+public class AlertDto
+        extends AbstractDto {
 
-        @NotNull
-        @EntityIdField
-        java.util.UUID id,
+    @NotNull
+    public final TickerDto ticker;
 
-        @NotNull
-        TickerDto ticker,
+    @NotNull
+    public final LocalDateTime ts;
 
-        @NotNull
-        LocalDateTime ts,
+    @NotNull
+    @SumAmountField
+    public final BigDecimal amount;
 
-        @NotNull
-        @PriceAmountField
-        BigDecimal amount,
+    @NotNull
+    @SumCurrencyField
+    public final String currency;
 
-        @Nullable
-        @AlertDiffField
-        Float diff,
+    @Nullable
+    @AlertDiffField
+    public final Float diff;
 
-        @NotNull
-        @PriceCurrencyField
-        String currency
-
-) {
-    public static AlertDto of(AlertEntity alert) {
-        return AlertDto.builder()
-                .id(alert.getId())
-                .ticker(TickerDto.of(alert.getTicker()))
-                .ts(alert.getTs())
-                .amount(alert.getAmount())
-                .diff(alert.getDiff())
-                .currency(alert.getCurrency())
-                .build();
+    public AlertDto(AlertEntity alert) {
+        super(alert);
+        this.ticker = new TickerDto(alert.getTicker());
+        this.ts = alert.getTs();
+        this.amount = alert.getAmount();
+        this.currency = alert.getCurrency();
+        this.diff = alert.getDiff();
     }
 }

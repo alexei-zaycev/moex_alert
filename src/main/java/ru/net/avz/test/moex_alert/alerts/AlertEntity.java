@@ -39,16 +39,16 @@ public class AlertEntity
     @Getter
     private BigDecimal amount;
 
+    @Column(length = 3)
+    @NotNull
+    @Getter
+    private String currency;
+
     /** Вспомогательное поле для визуализации процентного движения */
     @Column
     @Nullable
     @Getter
     private Float diff;
-
-    @Column(length = 3)
-    @NotNull
-    @Getter
-    private String currency;
 
     @Column
     @NotNull

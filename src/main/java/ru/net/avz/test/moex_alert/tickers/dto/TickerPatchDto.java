@@ -16,7 +16,6 @@ public record TickerPatchDto(
         Float threshold
 
 ){
-
     public TickerEntity.TickerEntityBuilder applyTo(TickerEntity ticker) {
         var builder = ticker.toBuilder();
         if (this.name != null) builder.name(this.name);

@@ -46,7 +46,7 @@ public class TickerRestController {
                     Sort.by(TickerEntity::getName).ascending().and(Sort.by(TickerEntity::getId).ascending()));
         }
         Page<TickerEntity> tickers = tickerService.findAll(pageable);
-        return new PagedModel<>(tickers.map(TickerDto::of));
+        return new PagedModel<>(tickers.map(TickerDto::new));
     }
 
     @GetMapping("/{name}")
@@ -59,7 +59,7 @@ public class TickerRestController {
             @Valid @PathVariable @TickerNameField String name) {
 
         TickerEntity ticker = tickerService.findByNameOrThrow(name);
-        return TickerDto.of(ticker);
+        return new TickerDto(ticker);
     }
 
     @PostMapping
@@ -73,7 +73,7 @@ public class TickerRestController {
             @Valid @RequestBody TickerCreateDto dto) {
 
         TickerEntity ticker = tickerService.create(dto);
-        return TickerDto.of(ticker);
+        return new TickerDto(ticker);
     }
 
     @PutMapping("/{name}")
@@ -88,7 +88,7 @@ public class TickerRestController {
             @Valid @RequestBody TickerUpdateDto dto) {
 
         TickerEntity ticker = tickerService.update(name, dto);
-        return TickerDto.of(ticker);
+        return new TickerDto(ticker);
     }
 
     @PatchMapping("/{name}")
@@ -103,7 +103,7 @@ public class TickerRestController {
             @Valid @RequestBody TickerPatchDto dto) {
 
         TickerEntity ticker = tickerService.patch(name, dto);
-        return TickerDto.of(ticker);
+        return new TickerDto(ticker);
     }
 
     @DeleteMapping("/{name}")

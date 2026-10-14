@@ -1,45 +1,37 @@
 package ru.net.avz.test.moex_alert.prices.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
+import ru.net.avz.test.moex_alert.common.dto.AbstractDto;
+import ru.net.avz.test.moex_alert.common.fields.SumAmountField;
+import ru.net.avz.test.moex_alert.common.fields.SumCurrencyField;
 import ru.net.avz.test.moex_alert.prices.PriceEntity;
-import ru.net.avz.test.moex_alert.prices.fields.PriceAmountField;
-import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
 import ru.net.avz.test.moex_alert.tickers.dto.TickerDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Builder
-public record PriceDto(
+public class PriceDto
+        extends AbstractDto {
 
-        @NotNull
-        @EntityIdField
-        java.util.UUID id,
+    @NotNull
+    public final TickerDto ticker;
 
-        @NotNull
-        TickerDto ticker,
+    @NotNull
+    public final LocalDateTime ts;
 
-        @NotNull
-        LocalDateTime ts,
+    @NotNull
+    @SumAmountField
+    public final BigDecimal amount;
 
-        @NotNull
-        @PriceAmountField
-        BigDecimal amount,
+    @NotNull
+    @SumCurrencyField
+    public final String currency;
 
-        @NotNull
-        @PriceCurrencyField
-        String currency
-
-) {
-    public static PriceDto of(PriceEntity price) {
-        return PriceDto.builder()
-                .id(price.getId())
-                .ticker(TickerDto.of(price.getTicker()))
-                .ts(price.getTs())
-                .amount(price.getAmount())
-                .currency(price.getCurrency())
-                .build();
+    public PriceDto(PriceEntity price) {
+        super(price);
+        this.ticker = new TickerDto(price.getTicker());
+        this.ts = price.getTs();
+        this.amount = price.getAmount();
+        this.currency = price.getCurrency();
     }
 }

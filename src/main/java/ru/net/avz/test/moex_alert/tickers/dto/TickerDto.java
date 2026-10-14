@@ -1,39 +1,31 @@
 package ru.net.avz.test.moex_alert.tickers.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import ru.net.avz.test.moex_alert.common.fields.EntityIdField;
-import ru.net.avz.test.moex_alert.prices.fields.PriceCurrencyField;
+import ru.net.avz.test.moex_alert.common.dto.AbstractDto;
+import ru.net.avz.test.moex_alert.common.fields.SumCurrencyField;
 import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 import ru.net.avz.test.moex_alert.tickers.fields.TickerNameField;
 import ru.net.avz.test.moex_alert.tickers.fields.TickerThresholdField;
 
-@Builder
-public record TickerDto(
+public class TickerDto
+        extends AbstractDto {
 
-        @NotNull
-        @EntityIdField
-        java.util.UUID id,
+    @NotNull
+    @TickerNameField
+    public final String name;
 
-        @NotNull
-        @TickerNameField
-        String name,
+    @NotNull
+    @TickerThresholdField
+    public final Float threshold;
 
-        @NotNull
-        @TickerThresholdField
-        Float threshold,
+    @NotNull
+    @SumCurrencyField
+    public final String currency;
 
-        @NotNull
-        @PriceCurrencyField
-        String currency
-
-) {
-    public static TickerDto of(TickerEntity ticker) {
-        return TickerDto.builder()
-                .id(ticker.getId())
-                .name(ticker.getName())
-                .threshold(ticker.getThreshold())
-                .currency(ticker.getCurrency())
-                .build();
+    public TickerDto(TickerEntity ticker) {
+        super(ticker);
+        this.name = ticker.getName();
+        this.threshold = ticker.getThreshold();
+        this.currency = ticker.getCurrency();
     }
 }

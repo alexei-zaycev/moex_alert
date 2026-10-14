@@ -1,9 +1,10 @@
-package ru.net.avz.test.moex_alert.prices.fields;
+package ru.net.avz.test.moex_alert.common.fields;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -12,13 +13,14 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@DecimalMin(value = "0", inclusive = false)
-@Schema(description = "Стоимость", example = "12.34")
+@NotBlank
+@Size(min = 3, max = 3)
+@Schema(description = "Код валюты", example = "RUB")
 @Target({FIELD, PARAMETER})
 @Retention(RUNTIME)
 @Constraint(validatedBy = {})
-public @interface PriceAmountField {
-    String message() default "Invalid amount";
+public @interface SumCurrencyField {
+    String message() default "Invalid currency";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

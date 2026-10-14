@@ -98,7 +98,7 @@ public class AlertWebSocketHandler
 
             return new TextMessage(
                     jsonMapper.writeValueAsString(
-                            AlertWebSocketDto.of(alert)));
+                            new AlertWebSocketDto(alert)));
 
         });
     }
