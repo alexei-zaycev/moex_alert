@@ -13,7 +13,7 @@ public interface TestHelper {
     Float TICKER_DEFAULT_THRESHOLD = 0.12f;
     String TICKER_DEFAULT_CURRENCY = "RUB";
 
-    static TickerEntity.TickerEntityBuilder createTickerBuilder() {
+    static TickerEntity.TickerEntityBuilder<?, ?> createTickerBuilder() {
         return TickerEntity.builder()
                 .name(TICKER_DEFAULT_NAME)
                 .threshold(TICKER_DEFAULT_THRESHOLD)
@@ -24,11 +24,11 @@ public interface TestHelper {
     BigDecimal PRICE_DEFAULT_AMOUNT = new BigDecimal("123.45");
     String PRICE_DEFAULT_CURRENCY = TICKER_DEFAULT_CURRENCY;
 
-    static PriceEntity.PriceEntityBuilder createPriceBuilder() {
+    static PriceEntity.PriceEntityBuilder<?, ?> createPriceBuilder() {
         return createPriceBuilder(createTickerBuilder().build());
     }
 
-    static PriceEntity.PriceEntityBuilder createPriceBuilder(TickerEntity ticker) {
+    static PriceEntity.PriceEntityBuilder<?, ?> createPriceBuilder(TickerEntity ticker) {
         return PriceEntity.builder()
                 .ticker(ticker)
                 .ts(PRICE_DEFAULT_TS)
@@ -41,10 +41,10 @@ public interface TestHelper {
     String ALERT_DEFAULT_CURRENCY = PRICE_DEFAULT_CURRENCY;
     Float ALERT_DEFAULT_DIFF = 12.3f;
 
-    static AlertEntity.AlertEntityBuilder createAlertBuilder() {
+    static AlertEntity.AlertEntityBuilder<?, ?> createAlertBuilder() {
         return createAlertBuilder(createTickerBuilder().build());
     }
-    static AlertEntity.AlertEntityBuilder createAlertBuilder(TickerEntity ticker) {
+    static AlertEntity.AlertEntityBuilder<?, ?> createAlertBuilder(TickerEntity ticker) {
         return AlertEntity.builder()
                 .ticker(ticker)
                 .ts(ALERT_DEFAULT_TS)

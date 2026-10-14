@@ -3,12 +3,16 @@ package ru.net.avz.test.moex_alert.common;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@SuperBuilder(toBuilder = true)
+@NoArgsConstructor
 @MappedSuperclass
 public abstract class AbstractEntity {
 

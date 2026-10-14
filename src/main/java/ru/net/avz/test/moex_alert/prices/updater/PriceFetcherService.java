@@ -56,7 +56,7 @@ public class PriceFetcherService
         List<TickerEntity> tickers = tickerService.findAll();
         if (tickers.isEmpty()) return List.of();
 
-        List<PriceEntity> prices = fetchPricesFromMoex(tickers, timeout);
+        List<PriceEntity> prices = loadPrices(tickers, timeout);
         if (prices.isEmpty()) return List.of();
 
         // заливаем в базу цены
@@ -78,7 +78,7 @@ public class PriceFetcherService
     }
 
     // TODO сделать rate limit
-    protected List<PriceEntity> fetchPricesFromMoex(
+    protected List<PriceEntity> loadPrices(
             List<TickerEntity> tickers,
             Duration timeout)
             throws PriceFetchException {
@@ -86,17 +86,7 @@ public class PriceFetcherService
         if (tickers.isEmpty()) return List.of();
         try {
 
-            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-            requestFactory.setConnectTimeout(CONN_TIMEOUT);
-            requestFactory.setReadTimeout(timeout);
-
-            String xml = RestClient.builder()
-                    .requestFactory(requestFactory)
-                    .build()
-                    .get()
-                    .uri("http://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.xml?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,LAST,LCURRENTPRICE")
-                    .retrieve()
-                    .body(String.class);
+            String xml = _fetchPricesFromMoex(timeout);
 
             return this._parseMoexXml(xml, tickers);
 
@@ -106,6 +96,23 @@ public class PriceFetcherService
 
             throw new PriceFetchException(ex);
         }
+    }
+
+    protected String _fetchPricesFromMoex(
+            Duration timeout)
+            throws RestClientException {
+
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(CONN_TIMEOUT);
+        requestFactory.setReadTimeout(timeout);
+
+        return RestClient.builder()
+                .requestFactory(requestFactory)
+                .build()
+                .get()
+                .uri("http://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities.xml?iss.meta=off&iss.only=marketdata&marketdata.columns=SECID,LAST,LCURRENTPRICE")
+                .retrieve()
+                .body(String.class);
     }
 
     protected List<PriceEntity> _parseMoexXml(
@@ -127,8 +134,8 @@ public class PriceFetcherService
                                 .filter(ticker -> ticker.getCurrency().equals(currency))
                                 .collect(Collectors.toMap(TickerEntity::getName, Function.identity()));
 
-                List<PriceEntity> prices =
-                        new ArrayList<>(tickers.size());
+                Map<String, PriceEntity> pricesByTickerName =
+                        new HashMap<>(tickers.size());
 
                 while (reader.hasNext()) {
                     int event = reader.next();
@@ -150,26 +157,27 @@ public class PriceFetcherService
                             }
                         }
                         if (rowSecId != null && rowLast != null && !rowLast.isBlank()) {
-                            TickerEntity ticker = tickersByName.get(rowSecId);
-                            //noinspection StatementWithEmptyBody
-                            if (ticker != null) {
-                                prices.add(
-                                        PriceEntity.builder()
-                                                .ticker(ticker)
-                                                .ts(LocalDateTime.now())
-                                                .amount(new BigDecimal(rowLast))
-                                                .currency(currency)
-                                                .build());
-                            } else {
-                                // IGNORE неизвестный тикер
-                            }
+                            BigDecimal amount = new BigDecimal(rowLast);
+                            pricesByTickerName.computeIfAbsent(rowSecId, name -> {
+                                TickerEntity ticker = tickersByName.get(name);
+                                if (ticker != null) {
+                                    return PriceEntity.builder()
+                                            .ticker(ticker)
+                                            .ts(LocalDateTime.now())
+                                            .amount(amount)
+                                            .currency(currency)
+                                            .build();
+                                } else {
+                                    return null;
+                                }
+                            });
                         }
                     }
                 }
 
-                log.info("Parsed {} prices from MOEX for registered {} tickers", prices.size(), tickersByName.size());
+                log.info("Parsed {} prices from MOEX for registered {} tickers", pricesByTickerName.size(), tickersByName.size());
 
-                return prices;
+                return List.copyOf(pricesByTickerName.values());
 
             } finally {
                 reader.close();
