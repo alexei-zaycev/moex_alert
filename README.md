@@ -13,11 +13,12 @@
 6. **Кэширование:** Caffeine в качестве провайдера L2-кэша для Hibernate
 7. **Проверка здоровья:** Эндпоинт мониторинга состояния `/actuator/health` (Spring Boot Actuator)
 8. **Автоматический сидинг:** добавление тикеров `SBER`, `YDEX`, `X5` с порогом `0.1` при первом запуске через Flyway-миграцию
+9. **Покрытие тестами:** JUnit, Mockito
 
 ---
 
 ## Стек технологий
-- **бэкенд:** Java 25, Spring Boot 4 / Actuator / Data JPA / WebMVC / WebSocket, Flyway, Caffeine, Lombok
+- **бэкенд:** Java 25, Spring Boot 4 / Actuator / Data JPA / WebMVC / WebSocket, Flyway, Caffeine, Mockito, Lombok
 - **база данных:** PostgreSQL 15
 - **контейнеризация:** Docker, Docker Compose (multi-stage build)
 
