@@ -1,7 +1,7 @@
 package ru.net.avz.test.moex_alert;
 
-import org.junit.platform.commons.annotation.Contract;
 import org.mockito.stubbing.Answer;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import ru.net.avz.test.moex_alert.alerts.AlertEntity;
 import ru.net.avz.test.moex_alert.common.AbstractEntity;
@@ -11,6 +11,7 @@ import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public interface TestHelper {
 
@@ -84,5 +85,11 @@ public interface TestHelper {
     Answer<?> transactionExecuteStub = invocation -> {
         TransactionCallback<?> callback = invocation.getArgument(0);
         return callback.doInTransaction(null);
+    };
+
+    Answer<?> transactionExecuteWithoutResultStub = invocation -> {
+        Consumer<TransactionStatus> callback = invocation.getArgument(0);
+        callback.accept(null);
+        return null;
     };
 }

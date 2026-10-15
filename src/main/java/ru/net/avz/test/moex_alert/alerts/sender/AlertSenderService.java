@@ -29,26 +29,31 @@ public class AlertSenderService
             return CompletableFuture.completedFuture(false);
 
         return alertWebSocketHandler.broadcastAlert(alert).handle((isSent, ex) -> {
-            if (ex == null) {
-                // оборачиваем в транзакцию
-                // защита от гонки встроена в логику запроса markAlertAsSent/markAlertAsNotSent
-                tx.executeWithoutResult(_ -> {
-                    if (isSent) {
-                        alertRepository.markAlertAsSent(
-                                alert.getId(),
-                                LocalDateTime.now());
-                    } else {
-                        alertRepository.markAlertAsNotSent(
-                                alert.getId(),
-                                alert.getSendAttempts(),
-                                _generateNextSendAfter(alert.getSendAttempts()).orElse(null));
-                    }
-                });
-                return isSent;
-            } else {
+
+            boolean success;
+            if (ex != null) {
                 log.error("Error sending alert {}", alert.getId(), ex);
-                return false;
+                success = false;
+            } else {
+                success = isSent;
             }
+
+            // оборачиваем в транзакцию
+            // защита от гонки встроена в логику запроса markAlertAsSent/markAlertAsNotSent
+            tx.executeWithoutResult(_ -> {
+                if (success) {
+                    alertRepository.markAlertAsSent(
+                            alert.getId(),
+                            LocalDateTime.now());
+                } else {
+                    alertRepository.markAlertAsNotSent(
+                            alert.getId(),
+                            alert.getSendAttempts(),
+                            _generateNextSendAfter(alert.getSendAttempts()).orElse(null));
+                }
+            });
+
+            return success;
         });
     }
 
