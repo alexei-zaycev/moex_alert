@@ -8,8 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 import ru.net.avz.test.moex_alert.TestHelper;
 import ru.net.avz.test.moex_alert.prices.PriceEntity;
@@ -23,7 +21,6 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,17 +60,13 @@ class PriceFetcherServiceTest {
         </document>
     """;
 
-    private static final TickerEntity VALID_TICKER_1 =
-            TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("SBER")
-                    .build();
+    private static final TickerEntity VALID_TICKER_1 = TestHelper.asSaved(
+            TestHelper.createTickerBuilder("SBER")
+    ).build();
 
-    private static final TickerEntity VALID_TICKER_2 =
-            TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("GAZP")
-                    .build();
+    private static final TickerEntity VALID_TICKER_2 =TestHelper.asSaved(
+            TestHelper.createTickerBuilder("GAZP")
+    ).build();
 
     private static final PriceEntity VALID_PRICE_1 =
             TestHelper.createPriceBuilder(VALID_TICKER_1)
@@ -112,14 +105,14 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("loadPrices should return empty when tickers list is empty")
-        void loadPricesShouldReturnEmptyWhenTickersIsEmpty() {
+        void loadPrices_tickersEmpty_returnEmpty() {
             List<PriceEntity> result = priceFetcherService.loadPrices(List.of(), Duration.ofSeconds(30));
             assertThat(result).isEmpty();
         }
 
         @Test
         @DisplayName("Should throw PriceFetchException wrapping XMLStreamException from _parseMoexXml")
-        void shouldThrowPriceFetchExceptionWrappingXmlStreamException() {
+        void loadPrices_xmlStreamException_throwsPriceFetchException() {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             PriceFetcherService spy = spy(priceFetcherService);
             doReturn(MALFORMED_XML).when(spy)._fetchPricesFromMoex(any(Duration.class));
@@ -130,7 +123,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should throw PriceFetchException wrapping NumberFormatException from _parseMoexXml")
-        void shouldThrowPriceFetchExceptionWrappingNumberFormatException() {
+        void loadPrices_numberFormatException_throwsPriceFetchException() {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             PriceFetcherService spy = spy(priceFetcherService);
             doReturn(INVALID_LAST_XML).when(spy)._fetchPricesFromMoex(any(Duration.class));
@@ -199,7 +192,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should throw XMLStreamException on malformed XML")
-        void shouldThrowXmlStreamExceptionOnMalformedXml() {
+        void parseMoexXml_MalformedXml_throwsXmlStreamException() {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             assertThatThrownBy(() -> priceFetcherService._parseMoexXml(MALFORMED_XML, tickers))
                     .isInstanceOf(XMLStreamException.class);
@@ -207,7 +200,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should return empty list for XML with no rows")
-        void shouldReturnEmptyListForXmlWithNoRows() throws Exception {
+        void parseMoexXml_xmlWithNoRows_returnEmpty() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             List<PriceEntity> result = priceFetcherService._parseMoexXml(EMPTY_ROWS_XML, tickers);
             assertThat(result).isEmpty();
@@ -215,7 +208,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should ignore rows with unknown SECID")
-        void shouldIgnoreUnknownSecurities() throws Exception {
+        void parseMoexXml_unknownTickers_returnKnownOnly() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1);
             List<PriceEntity> result = priceFetcherService._parseMoexXml(VALID_XML, tickers);
             assertThat(result)
@@ -226,7 +219,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should skip rows with empty LAST values")
-        void shouldSkipRowsWithEmptyLastValues() throws Exception {
+        void parseMoexXml_emptyLastValues_returnCorrectOnly() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             List<PriceEntity> result = priceFetcherService._parseMoexXml(EMPTY_LAST_XML, tickers);
             assertThat(result)
@@ -237,7 +230,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should skip rows with blank LAST values")
-        void shouldSkipRowsWithBlankLastValues() throws Exception {
+        void parseMoexXml_blankLastValues_returnCorrectOnly() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             List<PriceEntity> result = priceFetcherService._parseMoexXml(BLANK_LAST_XML, tickers);
             assertThat(result)
@@ -248,7 +241,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should skip rows with missing LAST values")
-        void shouldSkipRowsWithMissingLastValues() throws Exception {
+        void parseMoexXml_missingLastValues_returnCorrectOnly() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             List<PriceEntity> result = priceFetcherService._parseMoexXml(MISSING_LAST_XML, tickers);
             assertThat(result)
@@ -257,10 +250,9 @@ class PriceFetcherServiceTest {
                     .containsExactlyInAnyOrder(VALID_PRICE_1);
         }
 
-
         @Test
         @DisplayName("Should use first occurrence for duplicate SECID in XML")
-        void shouldUseFirstOccurrenceForDuplicateSecid() throws Exception {
+        void parseMoexXml_duplicateSecid_returnFirstOccurrence() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             List<PriceEntity> result = priceFetcherService._parseMoexXml(DUPLICATE_SECID_XML, tickers);
             assertThat(result)
@@ -272,20 +264,23 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should throw NumberFormatException for invalid LAST values")
-        void shouldThrowNumberFormatExceptionOnInvalidLastValues() {
+        void parseMoexXml_invalidLastValues_throwsNumberFormatException() {
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
             assertThatThrownBy(() -> priceFetcherService._parseMoexXml(INVALID_LAST_XML, tickers))
                     .isInstanceOf(NumberFormatException.class);
         }
 
         @Test
-        @DisplayName("Should return empty when all tickers are non-RUB")
-        void shouldReturnEmptyWhenAllTickersAreNonRub() throws Exception {
+        @DisplayName("Should return RUB only tickers")
+        void parseMoexXml_tickersAreNonRub_returnRubOnly() throws XMLStreamException, NumberFormatException {
             List<TickerEntity> tickers = List.of(
-                    TestHelper.createTickerBuilder().name(VALID_TICKER_1.getName()).currency("USD").build(),
-                    TestHelper.createTickerBuilder().name(VALID_TICKER_2.getName()).currency("EUR").build());
+                    TestHelper.createTickerBuilder(VALID_TICKER_1.getName()).currency("USD").build(),
+                    TestHelper.createTickerBuilder(VALID_TICKER_2.getName()).currency("RUB").build());
             List<PriceEntity> result = priceFetcherService._parseMoexXml(VALID_XML, tickers);
-            assertThat(result).isEmpty();
+            assertThat(result)
+                    .hasSize(1)
+                    .usingElementComparator(priceComparator)
+                    .containsExactlyInAnyOrder(VALID_PRICE_2);
         }
     }
 
@@ -293,16 +288,9 @@ class PriceFetcherServiceTest {
     @DisplayName("loadAndSavePrices()")
     class loadAndSavePrices {
 
-        private final Answer<?> priceSaveAllStub = invocation -> invocation.getArgument(0);
-
-        private final Answer<?> txStub = invocation -> {
-            TransactionCallback<?> callback = invocation.getArgument(0);
-            return callback.doInTransaction(null);
-        };
-
         @Test
         @DisplayName("Should return empty list when no tickers exist")
-        void shouldReturnEmptyListWhenNoTickersExist() {
+        void loadAndSavePrices_noTickersExist_returnEmpty() {
 
             when(tickerService.findAll()).thenReturn(List.of());
 
@@ -315,9 +303,9 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should return empty when tickers exist but none match XML")
-        void shouldReturnEmptyWhenTickersExistButNoneMatchXml() {
+        void loadAndSavePrices_tickersExistButNoneMatchXml_returnEmpty() {
 
-            TickerEntity xyz = TestHelper.createTickerBuilder().id(UUID.randomUUID()).name("XYZ").build();
+            TickerEntity xyz = TestHelper.asSaved(TestHelper.createTickerBuilder("XYZ")).build();
             List<TickerEntity> tickers = List.of(xyz);
 
             PriceFetcherService spy = spy(priceFetcherService);
@@ -333,14 +321,14 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should fetch, parse, and save all prices on happy path")
-        void shouldFetchParseAndSaveAllPricesOnHappyPath() {
+        void loadAndSavePrices_correctXml_allPrices() {
 
             List<TickerEntity> tickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
 
             PriceFetcherService spy = spy(priceFetcherService);
             when(tickerService.findAll()).thenReturn(tickers);
-            when(priceRepository.saveAll(any())).thenAnswer(priceSaveAllStub);
-            when(tx.execute(any())).thenAnswer(txStub);
+            when(priceRepository.saveAll(any())).thenAnswer(TestHelper.repositorySaveStub);
+            when(tx.execute(any())).thenAnswer(TestHelper.transactionExecuteStub);
             doReturn(VALID_XML).when(spy)._fetchPricesFromMoex(any(Duration.class));
 
             List<PriceEntity> result = spy.loadAndSavePrices();
@@ -359,7 +347,7 @@ class PriceFetcherServiceTest {
 
         @Test
         @DisplayName("Should filter out prices for tickers deleted during load")
-        void shouldFilterOutPricesForDeletedTickers() {
+        void loadAndSavePrices_deleteTickers_excludeDeleted() {
 
             List<TickerEntity> initialTickers = List.of(VALID_TICKER_1, VALID_TICKER_2);
 
@@ -367,8 +355,8 @@ class PriceFetcherServiceTest {
             lenient().when(tickerService.findAll())
                     .thenReturn(initialTickers)
                     .thenReturn(List.of(VALID_TICKER_1));
-            when(priceRepository.saveAll(any())).thenAnswer(priceSaveAllStub);
-            when(tx.execute(any())).thenAnswer(txStub);
+            when(priceRepository.saveAll(any())).thenAnswer(TestHelper.repositorySaveStub);
+            when(tx.execute(any())).thenAnswer(TestHelper.transactionExecuteStub);
             doReturn(VALID_XML).when(spy)._fetchPricesFromMoex(any(Duration.class));
 
             List<PriceEntity> result = spy.loadAndSavePrices();

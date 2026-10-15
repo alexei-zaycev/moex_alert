@@ -8,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 import ru.net.avz.test.moex_alert.TestHelper;
 import ru.net.avz.test.moex_alert.tickers.dto.TickerCreateDto;
 import ru.net.avz.test.moex_alert.tickers.dto.TickerPatchDto;
@@ -17,7 +16,6 @@ import ru.net.avz.test.moex_alert.tickers.exceptions.TickerAlreadyExistsExceptio
 import ru.net.avz.test.moex_alert.tickers.exceptions.TickerNotFoundException;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TickerServiceTest implements TestHelper {
+class TickerServiceTest {
 
     private TickerService tickerService;
 
@@ -37,8 +35,6 @@ class TickerServiceTest implements TestHelper {
         tickerRepository = mock(TickerRepository.class);
         tickerService = new TickerService(tickerRepository);
     }
-
-    private final Answer<?> priceSaveStub = invocation -> invocation.getArgument(0);
 
     private void assertTickersIsSame(TickerEntity expected, TickerEntity actual) {
         assertEquals(expected.getName(), actual.getName());
@@ -54,14 +50,14 @@ class TickerServiceTest implements TestHelper {
         @DisplayName("Should return ticker when found by name")
         void findByNameOrThrow_tickerExists_returnsTicker() {
 
-            TickerEntity ticker = TestHelper.createTickerBuilder().name("SBER").id(UUID.randomUUID()).build();
+            TickerEntity ticker = TestHelper.asSaved(TestHelper.createTickerBuilder("SBER")).build();
 
             when(tickerRepository.findByName(ticker.getName())).thenReturn(Optional.of(ticker));
 
             TickerEntity result = tickerService.findByNameOrThrow(ticker.getName());
             assertTickersIsSame(ticker, result);
 
-            verify(tickerRepository).findByName(ticker.getName());
+            verify(tickerRepository, times(1)).findByName(ticker.getName());
         }
 
         @Test
@@ -75,7 +71,7 @@ class TickerServiceTest implements TestHelper {
             assertThatThrownBy(() -> tickerService.findByNameOrThrow(nonExistentName))
                     .isInstanceOf(TickerNotFoundException.class);
 
-            verify(tickerRepository).findByName(nonExistentName);
+            verify(tickerRepository, times(1)).findByName(nonExistentName);
         }
     }
 
@@ -88,7 +84,7 @@ class TickerServiceTest implements TestHelper {
         void create_existingTicker_throwsException() {
 
             String tickerName = "SBER";
-            TickerEntity existingTicker = TestHelper.createTickerBuilder().name(tickerName).id(UUID.randomUUID()).build();
+            TickerEntity existingTicker = TestHelper.asSaved(TestHelper.createTickerBuilder(tickerName)).build();
             TickerCreateDto createDto = new TickerCreateDto(tickerName, 0.12f);
 
             when(tickerRepository.findByName(tickerName)).thenReturn(Optional.of(existingTicker));
@@ -96,7 +92,7 @@ class TickerServiceTest implements TestHelper {
             assertThatThrownBy(() -> tickerService.create(createDto))
                     .isInstanceOf(TickerAlreadyExistsException.class);
 
-            verify(tickerRepository).findByName(tickerName);
+            verify(tickerRepository, times(1)).findByName(tickerName);
             verify(tickerRepository, never()).save(any());
         }
 
@@ -112,7 +108,7 @@ class TickerServiceTest implements TestHelper {
                     .build();
 
             when(tickerRepository.findByName(createDto.name())).thenReturn(Optional.empty());
-            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(priceSaveStub);
+            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(TestHelper.repositorySaveStub);
 
             TickerEntity result = tickerService.create(createDto);
             assertTickersIsSame(expectedTicker, result);
@@ -138,7 +134,7 @@ class TickerServiceTest implements TestHelper {
             assertThatThrownBy(() -> tickerService.update(nonExistentName, updateDto))
                     .isInstanceOf(TickerNotFoundException.class);
 
-            verify(tickerRepository).findByName(nonExistentName);
+            verify(tickerRepository, times(1)).findByName(nonExistentName);
             verify(tickerRepository, never()).save(any());
         }
 
@@ -146,12 +142,12 @@ class TickerServiceTest implements TestHelper {
         @DisplayName("Should fully update an existing ticker")
         void update_existingTicker_updatesAndReturns() {
 
-            TickerEntity existingTicker = TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("SBER")
-                    .threshold(0.12f)
-                    .currency(TestHelper.DEFAULT_CURRENCY)
-                    .build();
+            TickerEntity existingTicker = TestHelper.asSaved(
+                    TestHelper.createTickerBuilder()
+                            .name("SBER")
+                            .threshold(0.12f)
+                            .currency(TestHelper.DEFAULT_CURRENCY)
+            ).build();
 
             TickerUpdateDto updateDto = new TickerUpdateDto("LKOH", 0.99f);
             TickerEntity expectedTicker = TestHelper.createTickerBuilder()
@@ -162,7 +158,7 @@ class TickerServiceTest implements TestHelper {
                     .build();
 
             when(tickerRepository.findByName(existingTicker.getName())).thenReturn(Optional.of(existingTicker));
-            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(priceSaveStub);
+            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(TestHelper.repositorySaveStub);
 
             TickerEntity result = tickerService.update(existingTicker.getName(), updateDto);
             assertTickersIsSame(expectedTicker, result);
@@ -188,7 +184,7 @@ class TickerServiceTest implements TestHelper {
             assertThatThrownBy(() -> tickerService.patch(nonExistentName, patchDto))
                     .isInstanceOf(TickerNotFoundException.class);
 
-            verify(tickerRepository).findByName(nonExistentName);
+            verify(tickerRepository, times(1)).findByName(nonExistentName);
             verify(tickerRepository, never()).save(any());
         }
 
@@ -196,12 +192,12 @@ class TickerServiceTest implements TestHelper {
         @DisplayName("Should partially update ticker when only name is provided")
         void patch_withOnlyName_updatesNameOnly() {
 
-            TickerEntity existingTicker = TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("SBER")
-                    .threshold(0.12f)
-                    .currency(TestHelper.DEFAULT_CURRENCY)
-                    .build();
+            TickerEntity existingTicker = TestHelper.asSaved(
+                    TestHelper.createTickerBuilder()
+                            .name("SBER")
+                            .threshold(0.12f)
+                            .currency(TestHelper.DEFAULT_CURRENCY)
+            ).build();
 
             TickerPatchDto patchDto = new TickerPatchDto("LKOH", null);
             TickerEntity expectedTicker = TestHelper.createTickerBuilder()
@@ -212,7 +208,7 @@ class TickerServiceTest implements TestHelper {
                     .build();
 
             when(tickerRepository.findByName(existingTicker.getName())).thenReturn(Optional.of(existingTicker));
-            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(priceSaveStub);
+            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(TestHelper.repositorySaveStub);
 
             TickerEntity result = tickerService.patch(existingTicker.getName(), patchDto);
             assertTickersIsSame(expectedTicker, result);
@@ -225,12 +221,12 @@ class TickerServiceTest implements TestHelper {
         @DisplayName("Should partially update ticker when only threshold is provided")
         void patch_withOnlyThreshold_updatesThresholdOnly() {
 
-            TickerEntity existingTicker = TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("SBER")
-                    .threshold(0.12f)
-                    .currency(TestHelper.DEFAULT_CURRENCY)
-                    .build();
+            TickerEntity existingTicker = TestHelper.asSaved(
+                    TestHelper.createTickerBuilder()
+                            .name("SBER")
+                            .threshold(0.12f)
+                            .currency(TestHelper.DEFAULT_CURRENCY)
+            ).build();
 
             TickerPatchDto patchDto = new TickerPatchDto(null, 0.5f);
             TickerEntity expectedTicker = TestHelper.createTickerBuilder()
@@ -241,7 +237,7 @@ class TickerServiceTest implements TestHelper {
                     .build();
 
             when(tickerRepository.findByName(existingTicker.getName())).thenReturn(Optional.of(existingTicker));
-            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(priceSaveStub);
+            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(TestHelper.repositorySaveStub);
 
             TickerEntity result = tickerService.patch(existingTicker.getName(), patchDto);
             assertTickersIsSame(expectedTicker, result);
@@ -254,12 +250,12 @@ class TickerServiceTest implements TestHelper {
         @DisplayName("Should update both name and threshold when both are provided")
         void patch_withBothFields_updatesBoth() {
 
-            TickerEntity existingTicker = TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("SBER")
-                    .threshold(0.12f)
-                    .currency(TestHelper.DEFAULT_CURRENCY)
-                    .build();
+            TickerEntity existingTicker = TestHelper.asSaved(
+                    TestHelper.createTickerBuilder()
+                            .name("SBER")
+                            .threshold(0.12f)
+                            .currency(TestHelper.DEFAULT_CURRENCY)
+            ).build();
 
             TickerPatchDto patchDto = new TickerPatchDto("LKOH", 0.5f);
             TickerEntity expectedTicker = TestHelper.createTickerBuilder()
@@ -270,7 +266,7 @@ class TickerServiceTest implements TestHelper {
                     .build();
 
             when(tickerRepository.findByName(existingTicker.getName())).thenReturn(Optional.of(existingTicker));
-            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(priceSaveStub);
+            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(TestHelper.repositorySaveStub);
 
             TickerEntity result = tickerService.patch(existingTicker.getName(), patchDto);
             assertTickersIsSame(expectedTicker, result);
@@ -283,17 +279,17 @@ class TickerServiceTest implements TestHelper {
         @DisplayName("Should not update field when patch value is null")
         void patch_withNullValues_preservesOriginalFields() {
 
-            TickerEntity existingTicker = TestHelper.createTickerBuilder()
-                    .id(UUID.randomUUID())
-                    .name("SBER")
-                    .threshold(0.12f)
-                    .currency(TestHelper.DEFAULT_CURRENCY)
-                    .build();
+            TickerEntity existingTicker = TestHelper.asSaved(
+                    TestHelper.createTickerBuilder()
+                            .name("SBER")
+                            .threshold(0.12f)
+                            .currency(TestHelper.DEFAULT_CURRENCY)
+            ).build();
 
             TickerPatchDto patchDto = new TickerPatchDto(null, null);
 
             when(tickerRepository.findByName(existingTicker.getName())).thenReturn(Optional.of(existingTicker));
-            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(priceSaveStub);
+            when(tickerRepository.save(any(TickerEntity.class))).thenAnswer(TestHelper.repositorySaveStub);
 
             TickerEntity result = tickerService.patch(existingTicker.getName(), patchDto);
             assertTickersIsSame(existingTicker, result);
@@ -308,21 +304,6 @@ class TickerServiceTest implements TestHelper {
     class DeleteTests {
 
         @Test
-        @DisplayName("Should delete ticker by name")
-        void delete_existingTicker_deletesById() {
-
-            String tickerName = "SBER";
-            TickerEntity existingTicker = TestHelper.createTickerBuilder().name(tickerName).id(UUID.randomUUID()).build();
-
-            when(tickerRepository.findByName(tickerName)).thenReturn(Optional.of(existingTicker));
-
-            tickerService.delete(tickerName);
-
-            verify(tickerRepository).findByName(tickerName);
-            verify(tickerRepository).deleteById(existingTicker.getId());
-        }
-
-        @Test
         @DisplayName("Should throw TickerNotFoundException when deleting non-existent ticker")
         void delete_nonExistentTicker_throwsException() {
 
@@ -333,8 +314,23 @@ class TickerServiceTest implements TestHelper {
             assertThatThrownBy(() -> tickerService.delete(nonExistentName))
                     .isInstanceOf(TickerNotFoundException.class);
 
-            verify(tickerRepository).findByName(nonExistentName);
+            verify(tickerRepository, times(1)).findByName(nonExistentName);
             verify(tickerRepository, never()).deleteById(any());
+        }
+
+        @Test
+        @DisplayName("Should delete ticker by name")
+        void delete_existingTicker_deletesById() {
+
+            String tickerName = "SBER";
+            TickerEntity existingTicker = TestHelper.asSaved(TestHelper.createTickerBuilder(tickerName)).build();
+
+            when(tickerRepository.findByName(tickerName)).thenReturn(Optional.of(existingTicker));
+
+            tickerService.delete(tickerName);
+
+            verify(tickerRepository, times(1)).findByName(tickerName);
+            verify(tickerRepository, times(1)).deleteById(existingTicker.getId());
         }
     }
 }

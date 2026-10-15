@@ -1,11 +1,16 @@
 package ru.net.avz.test.moex_alert;
 
+import org.junit.platform.commons.annotation.Contract;
+import org.mockito.stubbing.Answer;
+import org.springframework.transaction.support.TransactionCallback;
 import ru.net.avz.test.moex_alert.alerts.AlertEntity;
+import ru.net.avz.test.moex_alert.common.AbstractEntity;
 import ru.net.avz.test.moex_alert.prices.PriceEntity;
 import ru.net.avz.test.moex_alert.tickers.TickerEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public interface TestHelper {
 
@@ -16,8 +21,12 @@ public interface TestHelper {
     String TICKER_DEFAULT_CURRENCY = DEFAULT_CURRENCY;
 
     static TickerEntity.TickerEntityBuilder<?, ?> createTickerBuilder() {
+        return createTickerBuilder(TICKER_DEFAULT_NAME);
+    }
+
+    static TickerEntity.TickerEntityBuilder<?, ?> createTickerBuilder(String name) {
         return TickerEntity.builder()
-                .name(TICKER_DEFAULT_NAME)
+                .name(name)
                 .threshold(TICKER_DEFAULT_THRESHOLD)
                 .currency(TICKER_DEFAULT_CURRENCY);
     }
@@ -46,6 +55,7 @@ public interface TestHelper {
     static AlertEntity.AlertEntityBuilder<?, ?> createAlertBuilder() {
         return createAlertBuilder(createTickerBuilder().build());
     }
+
     static AlertEntity.AlertEntityBuilder<?, ?> createAlertBuilder(TickerEntity ticker) {
         return AlertEntity.builder()
                 .ticker(ticker)
@@ -57,4 +67,22 @@ public interface TestHelper {
                 .nextSendAfter(null)
                 .sentAt(null);
     }
+
+    static <C extends AbstractEntity, B extends AbstractEntity.AbstractEntityBuilder<C, ?>> B asSaved(
+            B builder) {
+
+        builder.id(UUID.randomUUID());
+        builder.createdAt(ALERT_DEFAULT_TS);
+        builder.updatedAt(ALERT_DEFAULT_TS);
+        return builder;
+    }
+
+    Answer<?> repositorySaveStub = invocation -> {
+        return invocation.getArgument(0);
+    };
+
+    Answer<?> transactionExecuteStub = invocation -> {
+        TransactionCallback<?> callback = invocation.getArgument(0);
+        return callback.doInTransaction(null);
+    };
 }

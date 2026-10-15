@@ -40,9 +40,8 @@ public class AlertWebSocketHandler
                     .messageType(AlertWebSocketDto.class)
                     .build();
 
-    public static final Duration LOCK_TIMEOUT = Duration.ofSeconds(10);
-    private static final Duration SEND_TIMEOUT = Duration.ofSeconds(5);
-    private static final String ATTR_KEY_LOCK = "lock";
+    private static final Duration DEFAULT_SEND_TIMEOUT = Duration.ofSeconds(5);
+    protected static final String ATTR_KEY_LOCK = "lock";
 
     @Qualifier("alertsExecutor") private final AsyncTaskExecutor taskExecutor;
     private final ObjectMapper jsonMapper;
@@ -71,11 +70,18 @@ public class AlertWebSocketHandler
     public CompletableFuture<Boolean> broadcastAlert(
             AlertEntity alert) {
 
+        return broadcastAlert(alert, DEFAULT_SEND_TIMEOUT);
+    }
+
+    public CompletableFuture<Boolean> broadcastAlert(
+            AlertEntity alert,
+            Duration timeout) {
+
         // если сессий нет - считаем что ничего не доставили
         if (sessions.isEmpty()) return CompletableFuture.completedFuture(false);
 
         return _buildMessage(alert)
-                    .thenCompose(message -> _sendBroadcast(alert, message))
+                    .thenCompose(message -> _sendBroadcast(alert, message, timeout))
                     .thenApply(results -> {
 
                         long opened = results.size(),
@@ -102,13 +108,14 @@ public class AlertWebSocketHandler
 
     protected CompletableFuture<List<Boolean>> _sendBroadcast(
             AlertEntity alert,
-            TextMessage message) {
+            TextMessage message,
+            Duration timeout) {
 
         List<CompletableFuture<Boolean>> tasks =
                 sessions.values()
                         .stream()
                         .filter(WebSocketSession::isOpen)
-                        .map(session -> _sendMessage(session, alert, message))
+                        .map(session -> _sendMessage(session, alert, message, timeout))
                         .toList();
 
         return CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).thenApply(_ ->
@@ -120,13 +127,14 @@ public class AlertWebSocketHandler
     protected CompletableFuture<Boolean> _sendMessage(
             WebSocketSession session,
             AlertEntity alert,
-            TextMessage message) {
+            TextMessage message,
+            Duration timeout) {
 
         return CompletableFuture.supplyAsync(() -> {
                     if (session.isOpen()) {
                         ReentrantLock lock = Objects.requireNonNull((ReentrantLock) session.getAttributes().get(ATTR_KEY_LOCK));
                         try {
-                            if (lock.tryLock(LOCK_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+                            if (lock.tryLock(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
                                 try {
                                     session.sendMessage(message);
                                     return true;
@@ -146,10 +154,10 @@ public class AlertWebSocketHandler
                         return false;
                     }
                 }, taskExecutor)
-                .orTimeout((LOCK_TIMEOUT.toMillis() + SEND_TIMEOUT.toMillis()), TimeUnit.MILLISECONDS)
+                .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
                 .exceptionally(ex -> {
                     log.warn("Failed to send alert {} to session {}", alert.getId(), session.getId(), ex);
-                    if (ex instanceof TimeoutException) {
+                    if (ex instanceof TimeoutException || (ex.getCause() != null && ex.getCause() instanceof TimeoutException)) {
                         try {
                             session.close(CloseStatus.SESSION_NOT_RELIABLE);
                         } catch (IOException _) {
